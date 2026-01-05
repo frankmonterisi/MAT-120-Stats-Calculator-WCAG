@@ -1,0 +1,3026 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Statistics Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        /* CSS Cleanup to address "CSS properties to control the visual appearance of the text were not used" and unit warnings */
+        .container-wcag {
+             max-width: 800px;
+             margin: 2rem auto;
+             padding: 2rem;
+             background-color: #ffffff;
+             border-radius: 1.5rem;
+             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+             /* WCAG FIX: Added explicit font properties for compliance */
+             color: #1f2937; 
+             font-family: 'Inter', sans-serif; 
+        }
+        .button-style {
+            transition: transform 0.1s ease-in-out, box-shadow 0.1s ease-in-out;
+            cursor: pointer;
+            /* WCAG FIX: Added explicit font property for compliance */
+            font-family: 'Inter', sans-serif;
+        }
+        .button-style:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .button-style:active {
+            transform: translateY(0);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+        }
+        .btn-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 1rem;
+        }
+        .btn-grid button {
+             padding: 1rem;
+             border-radius: 0.75rem;
+             font-weight: 600;
+        }
+        /* START: Stats Lists Custom CSS Adjustments for improved visualization */
+        .stats-lists-container {
+            display: flex;
+            flex-direction: column; /* Default stack on small screens */
+            gap: 1.5rem;
+        }
+        @media (min-width: 640px) { /* Tailwind's 'sm' breakpoint */
+             .stats-lists-container {
+                 flex-direction: row;
+             }
+        }
+        .stats-data-entry-wrapper {
+             /* New wrapper for list inputs to control scroll area */
+             width: 100%;
+             /* Setting max-height and overflow-y here for scroll control */
+             max-height: 25em; 
+             overflow-y: auto;
+             padding-right: 0.5rem; /* Padding for scrollbar visibility */
+        }
+        .stats-grid {
+            /* Now only controls the inner grid columns */
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+        .stats-grid input {
+            padding: 0.5rem;
+            /* WCAG FIX: Ensuring percentage unit is present and cleaning up declaration */
+            font-size: 87.5%; 
+            font-size: 0.875em; 
+        }
+        /* END: Stats Lists Custom CSS Adjustments */
+        
+        .calc-zero {
+            grid-column: span 2; 
+        }
+        /* WCAG FIX: Using em units for sr-only dimensions */
+        .sr-only-wcag {
+            position: absolute;
+            width: 0.0625em; 
+            height: 0.0625em;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+        /* WCAG FIX: Ensure focus visibility for skip link and buttons */
+        .focus\:not-sr-only:focus {
+            text-decoration: underline;
+        }
+        .button-keyboard-fix:focus {
+             outline: 2px solid #2563eb; 
+             outline-offset: 2px;
+        }
+    
+
+/* Accessibility additions */
+.skip-to-content{ text-decoration: underline; }
+.skip-to-content:hover, .skip-to-content:focus{ text-decoration: none; background-color:#004aad; }
+button:focus{ outline: 3px solid #005fcc; }
+</style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+    <a href="#main-content" class="sr-only focus:not-sr-only absolute top-0 left-0 bg-blue-600 text-white p-3 z-50" style="text-decoration: underline;">Skip to main content</a>
+    <div class="container-wcag w-full" id="main-content">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl sm:text-4xl font-bold text-gray-800 mb-2">Statistics Calculator</h1>
+            <p class="text-lg text-gray-600">A comprehensive tool for statistical analysis.</p>
+        </header>
+
+        <h2 id="main-tabs-heading" class="sr-only-wcag">Main Navigation</h2>
+        <nav role="tablist" class="flex flex-wrap sm:flex-nowrap justify-center sm:justify-start mb-6 -mx-2" aria-label="Main navigation tabs">
+            <button role="tab" id="tab-calculator" aria-controls="panel-calculator" aria-selected="true" class="button-style px-4 py-2 mx-2 mb-2 sm:mb-0 rounded-xl font-semibold text-sm sm:text-base border-b-4 border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all text-gray-700 bg-gray-200 hover:bg-gray-300 button-keyboard-fix">
+                Calculator
+            </button>
+            <button role="tab" id="tab-stats-lists" aria-controls="panel-stats-lists" aria-selected="false" class="button-style px-4 py-2 mx-2 mb-2 sm:mb-0 rounded-xl font-semibold text-sm sm:text-base border-b-4 border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all text-gray-700 bg-gray-200 hover:bg-gray-300 button-keyboard-fix">
+                Stats Lists
+            </button>
+            <button role="tab" id="tab-distributions" aria-controls="panel-distributions" aria-selected="false" class="button-style px-4 py-2 mx-2 mb-2 sm:mb-0 rounded-xl font-semibold text-sm sm:text-base border-b-4 border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all text-gray-700 bg-gray-200 hover:bg-gray-300 button-keyboard-fix">
+                Distributions
+            </button>
+            <button role="tab" id="tab-confidence" aria-controls="panel-confidence" aria-selected="false" class="button-style px-4 py-2 mx-2 mb-2 sm:mb-0 rounded-xl font-semibold text-sm sm:text-base border-b-4 border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all text-gray-700 bg-gray-200 hover:bg-gray-300 button-keyboard-fix">
+                Confidence Intervals
+            </button>
+            <button role="tab" id="tab-hypothesis" aria-controls="panel-hypothesis" aria-selected="false" class="button-style px-4 py-2 mx-2 mb-2 sm:mb-0 rounded-xl font-semibold text-sm sm:text-base border-b-4 border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all text-gray-700 bg-gray-200 hover:bg-gray-300 button-keyboard-fix">
+                Hypothesis Tests
+            </button>
+        </nav>
+
+        <main role="region" aria-label="Calculator Functions">
+            <h2 class="sr-only-wcag">Calculator Functions</h2>
+            
+            <section id="panel-calculator" role="tabpanel" aria-labelledby="tab-calculator" class="tab-panel">
+                <h2 class="sr-only-wcag">Calculator</h2>
+                <div class="space-y-6">
+                    <div class="bg-gray-50 p-6 rounded-lg border-2 border-gray-200">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-4">Standard Calculator - Select the AC button first to use the calculator</h3>
+                        <div id="calc-display" class="bg-gray-200 p-4 rounded-lg text-right text-3xl font-mono mb-4 border border-gray-300" role="status" aria-live="polite">0</div>
+                                        
+                        <div class="btn-grid">
+                            <button class="bg-gray-300 text-gray-800 hover:bg-gray-400 button-keyboard-fix" onclick="clearDisplay()" aria-label="All Clear">AC</button>
+                            <button class="bg-gray-300 text-gray-800 hover:bg-gray-400 button-keyboard-fix" onclick="deleteLast()" aria-label="Delete last entry">DEL</button>
+                            <button class="bg-gray-300 text-gray-800 hover:bg-gray-400 button-keyboard-fix" onclick="appendToDisplay('(')" aria-label="Open parenthesis">(</button>
+                            <button class="bg-gray-300 text-gray-800 hover:bg-gray-400 button-keyboard-fix" onclick="appendToDisplay(')')" aria-label="Close parenthesis">)</button>
+                            <button class="bg-blue-600 text-white hover:bg-blue-700 button-keyboard-fix" onclick="appendToDisplay('/')" aria-label="Divide">/</button>
+
+                            <button class="bg-gray-100 text-gray-800 hover:bg-gray-200 button-keyboard-fix" onclick="appendToDisplay('7')" aria-label="Seven">7</button>
+                            <button class="bg-gray-100 text-gray-800 hover:bg-gray-200 button-keyboard-fix" onclick="appendToDisplay('8')" aria-label="Eight">8</button>
+                            <button class="bg-gray-100 text-gray-800 hover:bg-gray-200 button-keyboard-fix" onclick="appendToDisplay('9')" aria-label="Nine">9</button>
+                            <button class="bg-gray-300 text-gray-800 hover:bg-gray-400 button-keyboard-fix" onclick="appendToDisplay('^')" aria-label="Exponent">x^y</button>
+                            <button class="bg-blue-600 text-white hover:bg-blue-700 button-keyboard-fix" onclick="appendToDisplay('*')" aria-label="Multiply">x</button>
+
+                            <button class="bg-gray-100 text-gray-800 hover:bg-gray-200 button-keyboard-fix" onclick="appendToDisplay('4')" aria-label="Four">4</button>
+                            <button class="bg-gray-100 text-gray-800 hover:bg-gray-200 button-keyboard-fix" onclick="appendToDisplay('5')" aria-label="Five">5</button>
+                            <button class="bg-gray-100 text-gray-800 hover:bg-gray-200 button-keyboard-fix" onclick="appendToDisplay('6')" aria-label="Six">6</button>
+                            <button class="bg-gray-300 text-gray-800 hover:bg-gray-400 button-keyboard-fix" onclick="squareRoot()" aria-label="Square Root">sqrt(x)</button>
+                            <button class="bg-blue-600 text-white hover:bg-blue-700 button-keyboard-fix" onclick="appendToDisplay('-')" aria-label="Subtract">-</button>
+
+                            <button class="bg-gray-100 text-gray-800 hover:bg-gray-200 button-keyboard-fix" onclick="appendToDisplay('1')" aria-label="One">1</button>
+                            <button class="bg-gray-100 text-gray-800 hover:bg-gray-200 button-keyboard-fix" onclick="appendToDisplay('2')" aria-label="Two">2</button>
+                            <button class="bg-gray-100 text-gray-800 hover:bg-gray-200 button-keyboard-fix" onclick="appendToDisplay('3')" aria-label="Three">3</button>
+                            <button class="bg-green-500 text-white hover:bg-green-600 calc-equal button-keyboard-fix" onclick="calculateResult()" aria-label="Equals">=</button>
+                            <button class="bg-blue-600 text-white hover:bg-blue-700 button-keyboard-fix" onclick="appendToDisplay('+')" aria-label="Add">+</button>
+
+                            <button class="bg-gray-100 text-gray-800 hover:bg-gray-200 calc-zero button-keyboard-fix" style="grid-column: span 2;" onclick="appendToDisplay('0')" aria-label="Zero">0</button>
+                            <button class="bg-gray-100 text-gray-800 hover:bg-gray-200 button-keyboard-fix" onclick="appendToDisplay('.')">.</button>
+                            <button class="bg-gray-300 text-gray-800 hover:bg-gray-400 button-keyboard-fix" onclick="toggleSign()" aria-label="Toggle Sign">+/-</button>
+                            <div style="grid-column: span 1;"></div>
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-50 p-6 rounded-lg border-2 border-gray-200">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-4">Advanced Functions</h3>
+                        
+                        <div class="mb-4">
+                            <label for="factorial-input" class="block text-gray-700 font-medium mb-2">Factorial (n!):</label>
+                            <div class="flex space-x-2">
+                                <label id="factorial-label" for="factorial-input" class="sr-only-wcag">Enter non-negative integer n for factorial:</label>
+                                <input type="number" id="factorial-input" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="n" title="Enter non-negative integer for n">
+                                <button onclick="calculateFactorial()" class="button-style bg-blue-600 text-white font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 button-keyboard-fix" aria-label="Calculate Factorial">
+                                    Calculate
+                                </button>
+                            </div>
+                            <div id="factorial-result" class="mt-2 text-gray-800 font-bold" role="status" aria-live="polite"></div>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="block text-gray-700 font-medium mb-2">Combinations (C(n, r)):</div>
+                            <div class="flex space-x-2 items-center">
+                                <div class="w-1/2">
+                                    <label for="combinations-n" class="block text-gray-700 font-medium mb-1 sr-only-wcag">Total items (n) for combinations</label>
+                                    <input type="number" id="combinations-n" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="n" title="Total items (n) for combinations">
+                                </div>
+                                <span class="text-gray-600 font-bold" aria-hidden="true">,</span>
+                                <div class="w-1/2">
+                                    <label for="combinations-r" class="block text-gray-700 font-medium mb-1 sr-only-wcag">Items chosen (r) for combinations</label>
+                                    <input type="number" id="combinations-r" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="r" title="Items chosen (r) for combinations">
+                                </div>
+                                <button onclick="calculateCombinations()" class="button-style bg-blue-600 text-white font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 button-keyboard-fix" aria-label="Calculate Combinations">
+                                    Calculate
+                                </button>
+                            </div>
+                            <div id="combinations-result" class="mt-2 text-gray-800 font-bold" role="status" aria-live="polite"></div>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="block text-gray-700 font-medium mb-2">Permutations (P(n, r)):</div>
+                            <div class="flex space-x-2 items-center">
+                                <div class="w-1/2">
+                                    <label for="permutations-n" class="block text-gray-700 font-medium mb-1 sr-only-wcag">Total items (n) for permutations</label>
+                                    <input type="number" id="permutations-n" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="n" title="Total items (n) for permutations">
+                                </div>
+                                <span class="text-gray-600 font-bold" aria-hidden="true">,</span>
+                                <div class="w-1/2">
+                                    <label for="permutations-r" class="block text-gray-700 font-medium mb-1 sr-only-wcag">Items chosen (r) for permutations</label>
+                                    <input type="number" id="permutations-r" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="r" title="Items chosen (r) for permutations">
+                                </div>
+                                <button onclick="calculatePermutations()" class="button-style bg-blue-600 text-white font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 button-keyboard-fix" aria-label="Calculate Permutations">
+                                    Calculate
+                                </button>
+                            </div>
+                            <div id="permutations-result" class="mt-2 text-gray-800 font-bold" role="status" aria-live="polite"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="panel-stats-lists" role="tabpanel" aria-labelledby="tab-stats-lists" class="tab-panel hidden">
+                <h2 class="sr-only-wcag">Statistics Lists</h2>
+                <div class="space-y-6">
+                    <div class="bg-gray-50 p-6 rounded-lg border-2 border-gray-200 stats-lists-container">
+                        <div class="w-full sm:w-2/3 flex flex-col items-center">
+                            <h3 class="text-2xl font-bold text-gray-800 mb-4">Data Entry (Max 40 per List)</h3>
+                            <div class="stats-data-entry-wrapper">
+                                <div class="stats-grid" id="stats-list-inputs">
+                                    <div class="flex flex-col space-y-2">
+                                        <h4 class="block text-gray-700 font-medium">L1 (Data/Values)</h4>
+                                        <script>
+                                            // FIX: Retaining explicit ID and title for each input. Labeling happens via 'for' attribute and visually hidden text.
+                                            const MAX_DATA_ROWS = 40; 
+                                            for (let i = 0; i < MAX_DATA_ROWS; i++) {
+                                                document.write(`<label for="l1-data-${i}" class="sr-only-wcag">L1 data row ${i+1}</label><input type="number" id="l1-data-${i}" class="p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 stats-input-l1" data-row="${i}" title="L1 data entry row ${i+1}">`);
+                                            }
+                                        </script>
+                                    </div>
+                                    <div class="flex flex-col space-y-2">
+                                        <h4 class="block text-gray-700 font-medium">L2 (Data/Frequency)</h4>
+                                        <script>
+                                            // FIX: Retaining explicit ID and title for each input. Labeling happens via 'for' attribute and visually hidden text.
+                                            const MAX_DATA_ROWS_L2 = 40; 
+                                            for (let i = 0; i < MAX_DATA_ROWS_L2; i++) {
+                                                document.write(`<label for="l2-data-${i}" class="sr-only-wcag">L2 data row ${i+1}</label><input type="number" id="l2-data-${i}" class="p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 stats-input-l2" data-row="${i}" title="L2 data entry row ${i+1}">`);
+                                            }
+                                        </script>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="w-full sm:w-1/3 flex flex-col justify-center space-y-4">
+                            <h3 class="text-2xl font-bold text-gray-800 mb-2 sm:mb-4">List Options</h3>
+                            <div id="stats-buttons" class="space-y-4">
+                                <button onclick="clearList('l1')" class="button-style bg-gray-400 text-white font-semibold py-2 px-3 rounded-xl shadow-md hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-400 text-sm w-full button-keyboard-fix">
+                                    Clear L1
+                                </button>
+                                <button onclick="clearList('l2')" class="button-style bg-gray-400 text-white font-semibold py-2 px-3 rounded-xl shadow-md hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-400 text-sm w-full button-keyboard-fix">
+                                    Clear L2
+                                </button>
+                                <button onclick="sortList('l1')" class="button-style bg-blue-600 text-white font-semibold py-2 px-3 rounded-xl shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm w-full button-keyboard-fix">
+                                    Sort L1
+                                </button>
+                                <button onclick="sortList('l2')" class="button-style bg-blue-600 text-white font-semibold py-2 px-3 rounded-xl shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm w-full button-keyboard-fix">
+                                    Sort L2
+                                </button>
+                                <button onclick="showOneVarStatsOptions()" class="button-style bg-green-600 text-white font-semibold py-2 px-3 rounded-xl shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 text-sm w-full button-keyboard-fix">
+                                    1-Var Stats
+                                </button>
+                                <button onclick="calculateLinearRegression()" class="button-style bg-yellow-600 text-white font-semibold py-2 px-3 rounded-xl shadow-md hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm w-full button-keyboard-fix">
+                                    Linear Reg (L1, L2)
+                                </button>
+                            </div>
+                            <div id="stats-options" class="space-y-4 hidden">
+                                <button onclick="calculateSingleListStats()" class="button-style bg-green-600 text-white font-semibold py-2 px-3 rounded-xl shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 text-sm w-full button-keyboard-fix">
+                                    Single List Data
+                                </button>
+                                <button onclick="calculateGroupedDataStats()" class="button-style bg-green-600 text-white font-semibold py-2 px-3 rounded-xl shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 text-sm w-full button-keyboard-fix">
+                                    Grouped Data (L1, L2)
+                                </button>
+                                <button onclick="showStatsButtons()" class="button-style bg-gray-400 text-white font-semibold py-2 px-3 rounded-xl shadow-md hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-400 text-sm w-full button-keyboard-fix">
+                                    &larr; Back to List Options
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-50 p-6 rounded-lg border-2 border-gray-200">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-4">Results</h3>
+                        <div id="stats-results" class="space-y-2 text-gray-800" role="status" aria-live="polite">
+                            <p>Enter your data into the L1 and L2 lists above to get started.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="panel-distributions" role="tabpanel" aria-labelledby="tab-distributions" class="tab-panel hidden">
+                <h2 class="sr-only-wcag">Distributions</h2>
+                <div id="dist-select" class="space-y-6">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">Select a Distribution</h3>
+                    <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+                        <button onclick="showDistribution('binomial')" class="button-style bg-blue-600 text-white font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full button-keyboard-fix">
+                            Binomial Distribution
+                        </button>
+                        <button onclick="showDistribution('normal')" class="button-style bg-blue-600 text-white font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full button-keyboard-fix">
+                            Normal Distribution
+                        </button>
+                    </div>
+                </div>
+
+                <div id="normal-calc" class="space-y-6 hidden">
+                    <button onclick="showDistribution('select')" class="button-style bg-gray-400 text-white font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-400 button-keyboard-fix">
+                        &larr; Back to Distributions
+                    </button>
+                    <div class="bg-gray-50 p-6 rounded-lg border-2 border-gray-200 mt-4">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-4">Normal Distribution Options</h3>
+                        <div id="normal-options" class="space-y-4">
+                            <button onclick="showNormalCalcOption('z-score')" class="button-style bg-green-600 text-white font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 w-full button-keyboard-fix">
+                                Find a Z-Score
+                            </button>
+                            <button onclick="showNormalCalcOption('probability')" class="button-style bg-green-600 text-white font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 w-full button-keyboard-fix">
+                                Find a Probability/Area
+                            </button>
+                            <button onclick="showNormalCalcOption('percentile')" class="button-style bg-green-600 text-white font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 w-full button-keyboard-fix">
+                                Find a Percentile/Value
+                            </button>
+                        </div>
+
+                        <div id="z-score-calc" class="space-y-4 hidden">
+                            <h4 class="text-xl font-bold text-gray-800 mb-2">Find a Z-Score</h4>
+                            <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
+                                <div class="w-full">
+                                    <label for="z-score-x-input" class="block text-gray-700 font-medium mb-1">X-Value</label>
+                                    <input type="number" id="z-score-x-input" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div class="w-full">
+                                    <label for="z-score-mean-input" class="block text-gray-700 font-medium mb-1">Mean (μ)</label>
+                                    <input type="number" id="z-score-mean-input" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" value="0">
+                                </div>
+                                <div class="w-full">
+                                    <label for="z-score-std-dev-input" class="block text-gray-700 font-medium mb-1">Standard Deviation (σ)</label>
+                                    <input type="number" id="z-score-std-dev-input" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" value="1">
+                                </div>
+                            </div>
+                            <button onclick="calculateZScore()" class="button-style bg-green-600 text-white font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 w-full button-keyboard-fix">
+                                Calculate Z-Score
+                            </button>
+                            <button onclick="showNormalCalcOption('options')" class="button-style bg-gray-400 text-white font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-400 w-full button-keyboard-fix">
+                                &larr; Back
+                            </button>
+                        </div>
+
+                        <div id="probability-calc" class="space-y-4 hidden">
+                            <h4 class="text-xl font-bold text-gray-800 mb-2">Find a Probability/Area</h4>
+                            <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
+                                <div class="w-full">
+                                    <label for="prob-mean-input" class="block text-gray-700 font-medium mb-1">Mean (μ)</label>
+                                    <input type="number" id="prob-mean-input" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" value="0">
+                                </div>
+                                <div class="w-full">
+                                    <label for="prob-std-dev-input" class="block text-gray-700 font-medium mb-1">Standard Deviation (σ)</label>
+                                    <input type="number" id="prob-std-dev-input" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" value="1">
+                                </div>
+                                <div class="w-full">
+                                    <label for="prob-n-input" class="block text-gray-700 font-medium mb-1">Sample Size (n)</label>
+                                    <input type="number" id="prob-n-input" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" value="1">
+                                </div>
+                            </div>
+                            <div class="space-y-4">
+                                <div>
+                                    <label for="prob-type-select" class="block text-gray-700 font-medium mb-1">Probability Type</label>
+                                    <select id="prob-type-select" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="less-than" selected>P(X &lt; a)</option>
+                                        <option value="greater-than">P(X &gt; b)</option>
+                                        <option value="between">P(a &lt; X &lt; b)</option>
+                                    </select>
+                                </div>
+                                <div id="prob-single-value-input">
+                                    <label for="prob-x-input" class="block text-gray-700 font-medium mb-1">X-Value</label>
+                                    <input type="number" id="prob-x-input" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div id="prob-between-values-input" class="hidden flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
+                                    <div class="w-full">
+                                        <label for="prob-a-input" class="block text-gray-700 font-medium mb-1">A-Value</label>
+                                        <input type="number" id="prob-a-input" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                    <div class="w-full">
+                                        <label for="prob-b-input" class="block text-gray-700 font-medium mb-1">B-Value</label>
+                                        <input type="number" id="prob-b-input" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button onclick="calculateNormalProbability()" class="button-style bg-green-600 text-white font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 w-full button-keyboard-fix">
+                                Calculate Probability
+                            </button>
+                            <button onclick="showNormalCalcOption('options')" class="button-style bg-gray-400 text-white font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-400 w-full button-keyboard-fix">
+                                &larr; Back
+                            </button>
+                        </div>
+
+                        <div id="percentile-calc" class="space-y-4 hidden">
+                            <h4 class="text-xl font-bold text-gray-800 mb-2">Find a Percentile/Value</h4>
+                            <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
+                                <div class="w-full">
+                                    <label for="percentile-mean-input" class="block text-gray-700 font-medium mb-1">Mean (μ)</label>
+                                    <input type="number" id="percentile-mean-input" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" value="0">
+                                </div>
+                                <div class="w-full">
+                                    <label for="percentile-std-dev-input" class="block text-gray-700 font-medium mb-1">Standard Deviation (σ)</label>
+                                    <input type="number" id="percentile-std-dev-input" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" value="1">
+                                </div>
+                            </div>
+
+                            <div class="space-y-4">
+                                <div>
+                                    <label for="percentile-type-select" class="block text-gray-700 font-medium mb-1">Area Type</label>
+                                    <select id="percentile-type-select" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="less-than" selected>Area to the left</option>
+                                        <option value="greater-than">Area to the right</option>
+                                        <option value="between">Area between</option>
+                                    </select>
+                                </div>
+                                <div id="percentile-single-value-input">
+                                    <label for="percentile-prob-input" class="block text-gray-700 font-medium mb-1">Area/Probability (e.g., 0.95)</label>
+                                    <input type="number" id="percentile-prob-input" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                            </div>
+
+                            <button onclick="calculatePercentile()" class="button-style bg-green-600 text-white font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 w-full button-keyboard-fix">
+                                Calculate Value
+                            </button>
+                            <button onclick="showNormalCalcOption('options')" class="button-style bg-gray-400 text-white font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-400 w-full button-keyboard-fix">
+                                &larr; Back
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-50 p-6 rounded-lg border-2 border-gray-200">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-4">Results</h3>
+                        <div id="normal-dist-results" class="space-y-2 text-gray-800" role="status" aria-live="polite">
+                            <p>Enter the parameters and values to calculate the probability.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="binomial-calc" class="space-y-6 hidden">
+                    <button onclick="showDistribution('select')" class="button-style bg-gray-400 text-white font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-400 button-keyboard-fix">
+                        &larr; Back to Distributions
+                    </button>
+                    <div class="bg-gray-50 p-6 rounded-lg border-2 border-gray-200 mt-4">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-4">Binomial Distribution</h3>
+
+                        <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
+                            <div class="w-full">
+                                <label for="binomial-n-input" class="block text-gray-700 font-medium mb-1">Number of Trials (n)</label>
+                                <input type="number" id="binomial-n-input" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" value="10">
+                            </div>
+                            <div class="w-full">
+                                <label for="binomial-p-input" class="block text-gray-700 font-medium mb-1">Probability of Success (p)</label>
+                                <input type="number" id="binomial-p-input" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" value="0.5">
+                            </div>
+                        </div>
+
+                        <div id="binomial-stats-results" class="mt-4 space-y-2 p-3 bg-gray-100 rounded-lg border border-gray-300 text-gray-800 font-semibold" role="status" aria-live="polite">
+                            <p>Click 'Calculate Probability' to see results.</p>
+                        </div>
+
+                        <div class="space-y-4 mt-4">
+                            <div>
+                                <label for="binomial-type-select" class="block text-gray-700 font-medium mb-1">Probability Type</label>
+                                <select id="binomial-type-select" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="exactly" selected>P(X = a)</option>
+                                    <option value="less-or-equal">P(X ≤ a)</option>
+                                    <option value="greater-or-equal">P(X ≥ a)</option>
+                                    <option value="between">P(a ≤ X ≤ b)</option>
+                                </select>
+                            </div>
+
+                            <div id="binomial-single-value-input">
+                                <label for="binomial-a-input" class="block text-gray-700 font-medium mb-1">Number of Successes (a)</label>
+                                <input type="number" id="binomial-a-input" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" value="5">
+                            </div>
+
+                            <div id="binomial-between-values-input" class="hidden flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
+                                <div class="w-full">
+                                    <label for="binomial-a-input-between" class="block text-gray-700 font-medium mb-1">Lower bound (a)</label>
+                                    <input type="number" id="binomial-a-input-between" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div class="w-full">
+                                    <label for="binomial-b-input-between" class="block text-gray-700 font-medium mb-1">Upper bound (b)</label>
+                                    <input type="number" id="binomial-b-input-between" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                            </div>
+                        </div>
+
+                        <button onclick="calculateBinomialProbability()" class="button-style bg-green-600 text-white font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 w-full mt-4 button-keyboard-fix">
+                            Calculate Probability
+                        </button>
+                    </div>
+                </div>
+
+            </section>
+
+            <section id="panel-confidence" role="tabpanel" aria-labelledby="tab-confidence" class="tab-panel hidden">
+                <h2 class="sr-only-wcag">Confidence Intervals</h2>
+                <div id="ci-select" class="space-y-6">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">Select Interval Type</h3>
+                    <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+                        <button onclick="showCIType('mean')" class="button-style bg-blue-600 text-white font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full button-keyboard-fix">
+                            Mean Confidence Interval
+                        </button>
+                        <button onclick="showCIType('proportion')" class="button-style bg-blue-600 text-white font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full button-keyboard-fix">
+                            Proportion Confidence Interval
+                        </button>
+                    </div>
+                </div>
+
+                <div id="ci-mean-calc" class="space-y-6 hidden">
+                    <button onclick="showCIType('select')" class="button-style bg-gray-400 text-white font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-400 button-keyboard-fix">
+                        &larr; Back to Selection
+                    </button>
+                    <div class="bg-gray-50 p-6 rounded-lg border-2 border-gray-200 mt-4">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-4">Mean Confidence Interval (T/Z-Interval)</h3>
+                        
+                        <div class="mb-4">
+                            <h4 class="block text-gray-700 font-medium mb-2">Data Input Method:</h4>
+                            <div class="flex space-x-4">
+                                <label for="ci-mean-summary-radio" class="inline-flex items-center text-gray-700 font-medium cursor-pointer">
+                                    <input type="radio" id="ci-mean-summary-radio" name="ci-mean-data-method" value="summary" checked onchange="updateMeanCIInputFields()" class="form-radio h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500" title="Use summary data: sample mean, standard deviation, and size.">
+                                    <span class="ml-2">Summary Data (x̄, s, n)</span>
+                                </label>
+                                <label for="ci-mean-raw-radio" class="inline-flex items-center text-gray-700 font-medium cursor-pointer">
+                                    <input type="radio" id="ci-mean-raw-radio" name="ci-mean-data-method" value="raw" onchange="updateMeanCIInputFields()" class="form-radio h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500" title="Use raw data from L1 list.">
+                                    <span class="ml-2">Raw Data List (L1)</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div id="ci-mean-input-summary" class="space-y-4">
+                            <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
+                                <div class="w-full">
+                                    <label for="ci-mean-xbar" class="block text-gray-700 font-medium mb-1">Sample Mean (x̄)</label>
+                                    <input type="number" id="ci-mean-xbar" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div class="w-full">
+                                    <label for="ci-mean-s" class="block text-gray-700 font-medium mb-1">Sample Std Dev (s)</label>
+                                    <input type="number" id="ci-mean-s" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                            </div>
+                            <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
+                                <div class="w-full">
+                                    <label for="ci-mean-n" class="block text-gray-700 font-medium mb-1">Sample Size (n)</label>
+                                    <input type="number" id="ci-mean-n" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div class="w-full">
+                                    <label for="ci-mean-c-level" class="block text-gray-700 font-medium mb-1">Confidence Level (C)</label>
+                                    <input type="number" step="0.01" id="ci-mean-c-level" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., 0.95">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="ci-mean-input-raw" class="space-y-4 hidden">
+                            <p class="text-gray-700 font-medium">Data is taken from **L1** on the **Stats Lists** tab. Ensure your data is entered there before calculating.</p>
+                            <div class="w-full">
+                                <label for="ci-mean-c-level-raw" class="block text-gray-700 font-medium mb-1">Confidence Level (C)</label>
+                                <input type="number" step="0.01" id="ci-mean-c-level-raw" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., 0.95">
+                            </div>
+                        </div>
+
+                        <button onclick="calculateMeanCI()" class="button-style bg-green-600 text-white font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 w-full mt-4 button-keyboard-fix">
+                            Calculate Mean Interval
+                        </button>
+                    </div>
+                </div>
+
+                <div id="ci-prop-calc" class="space-y-6 hidden">
+                    <button onclick="showCIType('select')" class="button-style bg-gray-400 text-white font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-400 button-keyboard-fix">
+                        &larr; Back to Selection
+                    </button>
+                    <div class="bg-gray-50 p-6 rounded-lg border-2 border-gray-200 mt-4">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-4">Proportion Confidence Interval (Z-Interval)</h3>
+                        
+                        <div class="mb-4">
+                            <h4 class="block text-gray-700 font-medium mb-2">Input Method:</h4>
+                            <label for="ci-prop-input-method" class="sr-only-wcag">Proportion input method selector</label>
+                            <select id="ci-prop-input-method" onchange="updatePropCIInputs()" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="x_n" selected>Successes (x) &amp; Sample Size (n)</option>
+                                <option value="phat_n">Sample Proportion (p̂) &amp; Sample Size (n)</option>
+                            </select>
+                        </div>
+                        <div id="ci-prop-input-x-n" class="space-y-4">
+                            <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
+                                <div class="w-full">
+                                    <label for="ci-prop-x" class="block text-gray-700 font-medium mb-1">Number of Successes (x)</label>
+                                    <input type="number" id="ci-prop-x" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div class="w-full">
+                                    <label for="ci-prop-n-x" class="block text-gray-700 font-medium mb-1">Sample Size (n)</label>
+                                    <input type="number" id="ci-prop-n-x" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="ci-prop-input-phat-n" class="space-y-4 hidden">
+                            <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
+                                <div class="w-full">
+                                    <label for="ci-prop-phat" class="block text-gray-700 font-medium mb-1">Sample Proportion (p̂)</label>
+                                    <input type="number" step="0.001" id="ci-prop-phat" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00 to 1.00">
+                                </div>
+                                <div class="w-full">
+                                    <label for="ci-prop-n-phat" class="block text-gray-700 font-medium mb-1">Sample Size (n)</label>
+                                    <input type="number" id="ci-prop-n-phat" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <label for="ci-prop-c-level" class="block text-gray-700 font-medium mb-1">Confidence Level (C)</label>
+                            <input type="number" step="0.01" id="ci-prop-c-level" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., 0.95">
+                        </div>
+                        <button onclick="calculateProportionCI()" class="button-style bg-green-600 text-white font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 w-full mt-4 button-keyboard-fix">
+                            Calculate Proportion Interval
+                        </button>
+                    </div>
+                </div>
+                <div class="bg-gray-50 p-6 rounded-lg border-2 border-gray-200 mt-6">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">Interval Results</h3>
+                    <div id="ci-results" class="space-y-2 text-gray-800" role="status" aria-live="polite">
+                        <p>Select a type of interval and enter parameters to calculate.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="panel-hypothesis" role="tabpanel" aria-labelledby="tab-hypothesis" class="tab-panel hidden">
+                <h2 class="sr-only-wcag">Hypothesis Tests</h2>
+                <div id="ht-select" class="space-y-6">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">Select Hypothesis Test Type</h3>
+                    <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+                        <button onclick="showHTType('mean-t')" class="button-style bg-blue-600 text-white font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full button-keyboard-fix">
+                            One Sample T-Test for Mean
+                        </button>
+                        <button onclick="showHTType('mean-t2')" class="button-style bg-purple-600 text-white font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 w-full button-keyboard-fix">
+                            Two Sample T-Test for Means
+                        </button>
+                    </div>
+                    <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+                        <button onclick="showHTType('prop-z')" class="button-style bg-blue-600 text-white font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full button-keyboard-fix">
+                            Single Sample Proportion Z-Test
+                        </button>
+                    </div>
+                </div>
+
+                <div id="ht-mean-t-calc" class="space-y-6 hidden">
+                    <button onclick="showHTType('select')" class="button-style bg-gray-400 text-white font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-400 button-keyboard-fix">
+                        &larr; Back to Selection
+                    </button>
+                    <div class="bg-gray-50 p-6 rounded-lg border-2 border-gray-200 mt-4">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-4">One Sample T-Test for Mean (σ Unknown)</h3>
+                        <div class="space-y-4">
+                            
+                            <div class="mb-4">
+                                <h4 class="block text-gray-700 font-medium mb-2">Data Input Method:</h4>
+                                <div class="flex space-x-4">
+                                    <label for="summary-radio-1" class="inline-flex items-center text-gray-700 font-medium cursor-pointer">
+                                        <input type="radio" id="summary-radio-1" name="ht-data-method" value="summary" checked onchange="updateTTestInputFields()" class="form-radio h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500" title="Use summary data: mean, standard deviation, and size.">
+                                        <span class="ml-2">Summary Data (x̄, s, n)</span>
+                                    </label>
+                                    <label for="raw-radio-1" class="inline-flex items-center text-gray-700 font-medium cursor-pointer">
+                                        <input type="radio" id="raw-radio-1" name="ht-data-method" value="raw" onchange="updateTTestInputFields()" class="form-radio h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500" title="Use raw data entered in the Raw Data text box.">
+                                        <span class="ml-2">Raw Data</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
+                                <div class="w-full">
+                                    <label for="ht-mean-t-mu0" class="block text-gray-700 font-medium mb-1">Hypothesized Mean (μ₀)</label>
+                                    <input type="number" id="ht-mean-t-mu0" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div class="w-full">
+                                    <label for="ht-mean-t-alpha" class="block text-gray-700 font-medium mb-1">Significance Level (α)</label>
+                                    <input type="number" step="0.01" id="ht-mean-t-alpha" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., 0.05">
+                                </div>
+                                <div class="w-full">
+                                    <label for="ht-mean-t-tail" class="block text-gray-700 font-medium mb-1">Alternative Hypothesis (H₁)</label>
+                                    <select id="ht-mean-t-tail" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="not-equal" selected>μ ≠ μ₀ (Two-Tail)</option>
+                                        <option value="less-than">μ < μ₀ (Left-Tail)</option>
+                                        <option value="greater-than">μ > μ₀ (Right-Tail)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div id="ht-input-summary" class="space-y-4">
+                                <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
+                                    <div class="w-full">
+                                        <label for="ht-mean-t-xbar" class="block text-gray-700 font-medium mb-1">Sample Mean (x̄)</label>
+                                        <input type="number" id="ht-mean-t-xbar" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                    <div class="w-full">
+                                        <label for="ht-mean-t-s" class="block text-gray-700 font-medium mb-1">Sample Std Dev (s)</label>
+                                        <input type="number" id="ht-mean-t-s" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                    <div class="w-full">
+                                        <label for="ht-mean-t-n" class="block text-gray-700 font-medium mb-1">Sample Size (n)</label>
+                                        <input type="number" id="ht-mean-t-n" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="ht-input-raw" class="space-y-2 hidden">
+                                <label for="ht-raw-data" class="block text-gray-700 font-medium mb-1">Raw Data (separate values by comma, space, or new line)</label>
+                                <textarea id="ht-raw-data" rows="4" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., 10.1, 12.5, 11.8, 10.9, 12.2"></textarea>
+                            </div>
+                        </div>
+
+                        <button onclick="calculateTTestMean()" class="button-style bg-green-600 text-white font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 w-full mt-4 button-keyboard-fix">
+                            Calculate T-Test
+                        </button>
+                    </div>
+                </div>
+
+                <div id="ht-mean-t2-calc" class="space-y-6 hidden">
+                    <button onclick="showHTType('select')" class="button-style bg-gray-400 text-white font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-400 button-keyboard-fix">
+                        &larr; Back to Selection
+                    </button>
+                    <div class="bg-gray-50 p-6 rounded-lg border-2 border-gray-200 mt-4">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-4">Two Sample T-Test for Means (μ₁ - μ₂)</h3>
+                        <div class="space-y-4">
+                            <div class="mb-4 p-3 bg-blue-100 rounded-lg">
+                                <h4 class="text-lg font-bold text-gray-800">Null Hypothesis (Fixed)</h4>
+                                <p class="text-md"><strong>H₀:</strong> μ₁ = μ₂</p>
+                            </div>
+
+                            <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
+                                <div class="w-full">
+                                    <label for="ht-mean-t2-alpha" class="block text-gray-700 font-medium mb-1">Significance Level (α)</label>
+                                    <input type="number" step="0.01" id="ht-mean-t2-alpha" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., 0.05" value="0.05">
+                                </div>
+                                <div class="w-full">
+                                    <label for="ht-mean-t2-tail" class="block text-gray-700 font-medium mb-1">Alternative Hypothesis (H₁)</label>
+                                    <select id="ht-mean-t2-tail" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="not-equal" selected>μ₁ ≠ μ₂ (Two-Tail)</option>
+                                        <option value="less-than">μ₁ < μ₂ (Left-Tail)</option>
+                                        <option value="greater-than">μ₁ > μ₂ (Right-Tail)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <h4 class="block text-gray-700 font-medium mb-2">Data Input Method:</h4>
+                                <div class="flex space-x-4">
+                                    <label for="summary-radio-2" class="inline-flex items-center text-gray-700 font-medium cursor-pointer">
+                                        <input type="radio" id="summary-radio-2" name="ht-data-method-2" value="summary" checked onchange="updateT2TestInputFields()" class="form-radio h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500" title="Use summary data for two samples.">
+                                        <span class="ml-2">Summary Data (x̄₁, s₁, n₁ and x̄₂, s₂, n₂)</span>
+                                    </label>
+                                    <label for="raw-radio-2" class="inline-flex items-center text-gray-700 font-medium cursor-pointer">
+                                        <input type="radio" id="raw-radio-2" name="ht-data-method-2" value="raw" onchange="updateT2TestInputFields()" class="form-radio h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500" title="Use raw data from L1 and L2 lists.">
+                                        <span class="ml-2">Raw Data Lists (L1 and L2)</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div id="ht-input-2-summary" class="space-y-4">
+                                <h4 class="text-xl font-bold text-gray-800 mt-6">Sample 1 (μ₁)</h4>
+                                <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
+                                    <div class="w-full">
+                                        <label for="ht-mean-t2-xbar1" class="block text-gray-700 font-medium mb-1">Sample Mean (x̄₁)</label>
+                                        <input type="number" id="ht-mean-t2-xbar1" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                    <div class="w-full">
+                                        <label for="ht-mean-t2-s1" class="block text-gray-700 font-medium mb-1">Sample Std Dev (s₁)</label>
+                                        <input type="number" id="ht-mean-t2-s1" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                    <div class="w-full">
+                                        <label for="ht-mean-t2-n1" class="block text-gray-700 font-medium mb-1">Sample Size (n₁)</label>
+                                        <input type="number" id="ht-mean-t2-n1" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                </div>
+                                <h4 class="text-xl font-bold text-gray-800 mt-6">Sample 2 (μ₂)</h4>
+                                <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
+                                    <div class="w-full">
+                                        <label for="ht-mean-t2-xbar2" class="block text-gray-700 font-medium mb-1">Sample Mean (x̄₂)</label>
+                                        <input type="number" id="ht-mean-t2-xbar2" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                    <div class="w-full">
+                                        <label for="ht-mean-t2-s2" class="block text-gray-700 font-medium mb-1">Sample Std Dev (s₂)</label>
+                                        <input type="number" id="ht-mean-t2-s2" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                    <div class="w-full">
+                                        <label for="ht-mean-t2-n2" class="block text-gray-700 font-medium mb-1">Sample Size (n₂)</label>
+                                        <input type="number" id="ht-mean-t2-n2" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="ht-input-2-raw" class="space-y-2 hidden">
+                                <p class="text-gray-700 font-medium mb-1">Enter your raw data into **L1** and **L2** on the **Stats Lists** tab.</p>
+                                <p class="text-sm text-gray-500">L1 will be treated as Sample 1, and L2 as Sample 2.</p>
+                            </div>
+                        </div>
+
+                        <button onclick="calculate2SampleTTest()" class="button-style bg-purple-600 text-white font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 w-full mt-4 button-keyboard-fix">
+                            Calculate Two Sample T-Test
+                        </button>
+                    </div>
+                </div>
+
+
+                <div id="ht-prop-z-calc" class="space-y-6 hidden">
+                    <button onclick="showHTType('select')" class="button-style bg-gray-400 text-white font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-400 button-keyboard-fix">
+                        &larr; Back to Selection
+                    </button>
+                    <div class="bg-gray-50 p-6 rounded-lg border-2 border-gray-200 mt-4">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-4">Single Sample Proportion Z-Test</h3>
+                        
+                        <div class="mb-4">
+                            <h4 class="block text-gray-700 font-medium mb-2">Input Data:</h4>
+                            <div class="flex space-x-4">
+                                <label for="prop-x-n-radio" class="inline-flex items-center text-gray-700 font-medium cursor-pointer">
+                                    <input type="radio" id="prop-x-n-radio" name="ht-prop-method" value="x_n" checked onchange="updatePropTestInputFields()" class="form-radio h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500" title="Use number of successes (x) and sample size (n).">
+                                    <span class="ml-2">Successes (x) & Sample Size (n)</span>
+                                </label>
+                                <label for="prop-phat-n-radio" class="inline-flex items-center text-gray-700 font-medium cursor-pointer">
+                                    <input type="radio" id="prop-phat-n-radio" name="ht-prop-method" value="phat_n" onchange="updatePropTestInputFields()" class="form-radio h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500" title="Use sample proportion (p̂) and sample size (n).">
+                                    <span class="ml-2">Sample Proportion (p̂) & Sample Size (n)</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
+                                <div class="w-full">
+                                    <label for="ht-prop-p0" class="block text-gray-700 font-medium mb-1">Hypothesized Proportion (p₀)</label>
+                                    <input type="number" id="ht-prop-p0" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., 0.5">
+                                </div>
+                                <div class="w-full">
+                                    <label for="ht-prop-alpha" class="block text-gray-700 font-medium mb-1">Significance Level (α)</label>
+                                    <input type="number" step="0.01" id="ht-prop-alpha" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., 0.05">
+                                </div>
+                                <div class="w-full">
+                                    <label for="ht-prop-tail" class="block text-gray-700 font-medium mb-1">Alternative Hypothesis (H₁)</label>
+                                    <select id="ht-prop-tail" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="not-equal" selected>p ≠ p₀ (Two-Tail)</option>
+                                        <option value="less-than">p < p₀ (Left-Tail)</option>
+                                        <option value="greater-than">p > p₀ (Right-Tail)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div id="ht-prop-input-x-n" class="space-y-4">
+                                <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
+                                    <div class="w-full">
+                                        <label for="ht-prop-x" class="block text-gray-700 font-medium mb-1">Number of Successes (x)</label>
+                                        <input type="number" id="ht-prop-x" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                    <div class="w-full">
+                                        <label for="ht-prop-n-x" class="block text-gray-700 font-medium mb-1">Sample Size (n)</label>
+                                        <input type="number" id="ht-prop-n-x" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="ht-prop-input-phat-n" class="space-y-4 hidden">
+                                <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
+                                    <div class="w-full">
+                                        <label for="ht-prop-phat" class="block text-gray-700 font-medium mb-1">Sample Proportion (p̂)</label>
+                                        <input type="number" step="0.001" id="ht-prop-phat" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00 to 1.00">
+                                    </div>
+                                    <div class="w-full">
+                                        <label for="ht-prop-n-phat" class="block text-gray-700 font-medium mb-1">Sample Size (n)</label>
+                                        <input type="number" id="ht-prop-n-phat" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button onclick="calculatePropZTest()" class="button-style bg-green-600 text-white font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 w-full mt-4 button-keyboard-fix">
+                            Calculate Proportion Z-Test
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-gray-50 p-6 rounded-lg border-2 border-gray-200 mt-6">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">Test Results</h3>
+                    <div id="ht-results" class="space-y-2 text-gray-800" role="status" aria-live="polite">
+                        <p>Select a test type and enter parameters to calculate.</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script>
+        const tabs = document.querySelectorAll('[role="tab"]');
+        const tabPanels = document.querySelectorAll('.tab-panel');
+
+        /**
+         * Core function to switch visible panels and update tab state.
+         * @param {string} targetId - The ID of the panel to show (e.g., 'panel-calculator').
+         */
+        function showPanel(targetId) {
+            tabPanels.forEach(panel => {
+                // Show/hide the panel content
+                if (panel.id === targetId) {
+                    panel.classList.remove('hidden');
+                } else {
+                    panel.classList.add('hidden');
+                }
+            });
+
+            // Update tab button styles
+            tabs.forEach(tab => {
+                const isActive = tab.getAttribute('aria-controls') === targetId;
+                tab.setAttribute('aria-selected', isActive);
+                
+                if (isActive) {
+                    tab.classList.remove('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
+                    tab.classList.add('bg-blue-600', 'text-white', 'border-blue-600');
+                } else {
+                    tab.classList.remove('bg-blue-600', 'text-white', 'border-blue-600');
+                    tab.classList.add('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
+                }
+            });
+        }
+
+        tabs.forEach(tab => {
+            // FIX: Use keydown for better keyboard handling with standard button focusing
+            tab.addEventListener('click', () => {
+                const targetPanelId = tab.getAttribute('aria-controls');
+                showPanel(targetPanelId);
+            });
+            tab.addEventListener('keydown', (e) => {
+                 // Check for Enter or Space to activate the tab
+                 if (e.key === 'Enter' || e.key === ' ') {
+                     e.preventDefault();
+                     const targetPanelId = tab.getAttribute('aria-controls');
+                     showPanel(targetPanelId);
+                 }
+            });
+        });
+
+        // Initialize first tab as active *MANUALLY* to avoid infinite loop from .click()
+        document.addEventListener('DOMContentLoaded', () => {
+            const initialPanelId = 'panel-calculator';
+            const initialTab = document.getElementById('tab-calculator');
+
+            // 1. Manually show the first panel
+            const initialPanel = document.getElementById(initialPanelId);
+            if (initialPanel) {
+                initialPanel.classList.remove('hidden');
+            }
+
+            // 2. Manually style the first tab
+            if (initialTab) {
+                initialTab.setAttribute('aria-selected', 'true');
+                initialTab.classList.remove('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
+                initialTab.classList.add('bg-blue-600', 'text-white', 'border-blue-600');
+            }
+            
+            // Re-bind change listener for binomial inputs on load
+            const binomialSelect = document.getElementById('binomial-type-select');
+            if (binomialSelect) {
+                 binomialSelect.addEventListener('change', updateBinomialInputs);
+            }
+            
+            // WCAG FIX: Bind change listeners for new radio buttons
+            document.querySelectorAll('input[name="ci-mean-data-method"]').forEach(radio => {
+                radio.addEventListener('change', updateMeanCIInputFields);
+            });
+            document.querySelectorAll('input[name="ht-data-method"]').forEach(radio => {
+                radio.addEventListener('change', updateTTestInputFields);
+            });
+            document.querySelectorAll('input[name="ht-data-method-2"]').forEach(radio => {
+                radio.addEventListener('change', updateT2TestInputFields);
+            });
+            document.querySelectorAll('input[name="ht-prop-method"]').forEach(radio => {
+                radio.addEventListener('change', updatePropTestInputFields);
+            });
+            
+            // WCAG FIX: Manually check the first radio button in each group (HTML handles `checked` attribute)
+            // But manually trigger the update function to ensure initial state is correct.
+            updateMeanCIInputFields(); 
+            updateTTestInputFields();
+            updateT2TestInputFields();
+            updatePropTestInputFields();
+        });
+
+        // --- GLOBAL HELPER FUNCTIONS ---
+
+        /**
+         * Formats a probability value for clear display, using scientific notation for very small numbers.
+         * @param {number} prob The probability value.
+         * @returns {string} The formatted string.
+         */
+        function formatProb(prob) {
+            if (prob === 0) return "0";
+            // Use scientific notation for probabilities less than 0.000001
+            if (prob < 0.000001) return prob.toExponential(6);
+            // Otherwise, use fixed decimal places for readability (9 decimals for precision)
+            return prob.toFixed(9);
+        }
+
+        /**
+         * Log Gamma function, used in the Incomplete Beta Function.
+         */
+        function logGamma(z) {
+            // Lanczos approximation for log of gamma function
+            const g = 7;
+            const coef = [
+                0.99999999999980993,
+                676.5203681218851,
+                -1259.1392167224028,
+                771.32342877765313,
+                -176.61502916214059,
+                12.507343278686905,
+                -0.13857109526572012,
+                9.9843695780195716e-6,
+                1.5056327351493116e-7
+            ];
+            
+            if (z < 0.5) {
+                return Math.log(Math.PI) - Math.log(Math.sin(Math.PI * z)) - logGamma(1 - z);
+            }
+            
+            z -= 1;
+            let x = coef[0];
+            for (let i = 1; i < g + 2; i++) {
+                x += coef[i] / (z + i);
+            }
+            
+            const t = z + g + 0.5;
+            return 0.5 * Math.log(2 * Math.PI) + (z + 0.5) * Math.log(t) - t + Math.log(x);
+        }
+        
+        // --- Standard Calculator Logic ---
+        const calcDisplay = document.getElementById('calc-display');
+        let currentInput = '';
+        let result = '';
+
+        function updateDisplay() {
+            if (currentInput === '') {
+                calcDisplay.innerText = result !== '' ? result : '0';
+            } else {
+                calcDisplay.innerText = currentInput;
+            }
+        }
+
+        function appendToDisplay(value) {
+            // Prevent input from being shown in the main display if the user is typing in the advanced function fields
+            const activeElement = document.activeElement;
+            if (activeElement && (activeElement.id === 'factorial-input' || activeElement.id === 'combinations-n' || activeElement.id === 'combinations-r' || activeElement.id === 'permutations-n' || activeElement.id === 'permutations-r')) {
+                return;
+            }
+
+            if (result !== '' && !['+', '-', '*', '/', '^'].includes(value)) {
+                clearDisplay();
+            }
+            
+            // --- IMPLICIT MULTIPLICATION LOGIC ---
+            const lastChar = currentInput.slice(-1);
+            const isNumberOrDecimal = /\d|\./.test(value);
+            const isOpeningParen = value === '(';
+            
+            // 1. Case: number followed by '(' (e.g., 2(3+4))
+            if (isOpeningParen && /\d/.test(lastChar)) {
+                 currentInput += '*';
+            }
+            
+            // 2. Case: ')' followed by number (e.g., (1/2)2)
+            if (isNumberOrDecimal && lastChar === ')') {
+                 currentInput += '*';
+            }
+            
+            // 3. Case: ')' followed by '(' (e.g., (1/2)(1/3))
+            if (isOpeningParen && lastChar === ')') {
+                 currentInput += '*';
+            }
+            // --- END IMPLICIT MULTIPLICATION LOGIC ---
+
+            currentInput += value;
+            updateDisplay();
+        }
+
+        function clearDisplay() {
+            currentInput = '';
+            result = '';
+            calcDisplay.innerText = '0';
+        }
+
+        function deleteLast() {
+            currentInput = currentInput.slice(0, -1);
+            if (currentInput === '') {
+                calcDisplay.innerText = '0';
+            } else {
+                updateDisplay();
+            }
+        }
+
+        function calculateResult() {
+            if (currentInput === '') return;
+            try {
+                // Using eval is a security risk, but for a simple, local calculator it's acceptable.
+                // A production environment would use a math parser library.
+                result = eval(currentInput.replace(/\^/g, '**'));
+                currentInput = '';
+                updateDisplay();
+            } catch (e) {
+                calcDisplay.innerText = 'Error';
+                currentInput = '';
+                result = '';
+            }
+        }
+
+        function squareRoot() {
+            if (currentInput === '') return;
+            try {
+                result = Math.sqrt(eval(currentInput));
+                currentInput = '';
+                updateDisplay();
+            } catch (e) {
+                calcDisplay.innerText = 'Error';
+                currentInput = '';
+                result = '';
+            }
+        }
+
+        /**
+         * Toggles the sign of the current input or the last result.
+         */
+        function toggleSign() {
+            if (currentInput !== '') {
+                // If currently typing an expression, toggle the sign of the LAST number entered
+                // This is a complex logic for a full calculator, but for basic single-value negation:
+                // If the input is just a number (with optional -), negate it.
+                if (/^-?\d*\.?\d*$/.test(currentInput)) {
+                     currentInput = String(-parseFloat(currentInput));
+                } else if (currentInput.endsWith(')')) {
+                    // Cannot easily negate the last part of a complex expression with parentheses
+                    return; 
+                } else if (currentInput.match(/([+\-*/^])-?(\d*\.?\d*)$/)) {
+                    // Try to negate the last number after an operator
+                    currentInput = currentInput.replace(/([+\-*/^])-?(\d*\.?\d*)$/, (match, operator, number) => {
+                        // Ensure we don't end up with operator followed by another operator
+                        if (operator && number.length > 0) {
+                            return operator + (-parseFloat(number));
+                        }
+                        return match;
+                    });
+                }
+            } else if (result !== '') {
+                // If a result is displayed, negate the result
+                result = String(-parseFloat(result));
+            } else {
+                // Default to negating zero (making it -0 which displays as 0)
+                currentInput = '-';
+            }
+            updateDisplay();
+        }
+
+        // --- Combinations, Permutations, Factorials Logic (Unchanged) ---
+
+        /**
+         * Calculates the factorial of a number.
+         * @param {number} n The number to calculate the factorial of.
+         * @returns {number} The factorial result or an error message.
+         */
+        function factorial(n) {
+            if (n < 0 || !Number.isInteger(n)) {
+                return NaN;
+            }
+            if (n === 0 || n === 1) {
+                return 1;
+            }
+            let result = 1;
+            for (let i = 2; i <= n; i++) {
+                result *= i;
+            }
+            return result;
+        }
+
+        /**
+         * Handles the factorial calculation and displays the result.
+         */
+        function calculateFactorial() {
+            const input = document.getElementById('factorial-input').value;
+            const n = parseInt(input);
+            const resultDiv = document.getElementById('factorial-result');
+
+            if (isNaN(n) || n < 0) {
+                resultDiv.innerText = 'Error: n must be a non-negative integer.';
+                return;
+            }
+
+            const result = factorial(n);
+            if (isNaN(result)) {
+                resultDiv.innerText = 'Error: Calculation out of range.';
+            } else {
+                resultDiv.innerText = `Result: ${result}`;
+            }
+        }
+
+        /**
+         * Handles the combinations calculation and displays the result.
+         */
+        function calculateCombinations() {
+            const n = parseInt(document.getElementById('combinations-n').value);
+            const r = parseInt(document.getElementById('combinations-r').value);
+            const resultDiv = document.getElementById('combinations-result');
+
+            if (isNaN(n) || isNaN(r) || n < r || n < 0 || r < 0) {
+                resultDiv.innerText = 'Error: Invalid input. Ensure n and r are non-negative integers and n ≥ r.';
+                return;
+            }
+
+            // Using the stable binomial coefficient function from Distributions Logic
+            const result = getBinomialCoefficient(n, r);
+
+            if (isNaN(result)) {
+                resultDiv.innerText = 'Error: Calculation out of range.';
+            } else {
+                resultDiv.innerText = `Result: ${result}`;
+            }
+        }
+
+        /**
+         * Handles the permutations calculation and displays the result.
+         */
+        function calculatePermutations() {
+            const n = parseInt(document.getElementById('permutations-n').value);
+            const r = parseInt(document.getElementById('permutations-r').value);
+            const resultDiv = document.getElementById('permutations-result');
+
+            if (isNaN(n) || isNaN(r) || n < r || n < 0 || r < 0) {
+                resultDiv.innerText = 'Error: Invalid input. Ensure n and r are non-negative integers and n ≥ r.';
+                return;
+            }
+
+            const nFact = factorial(n);
+            const nMinusRFact = factorial(n - r);
+
+            if (isNaN(nFact) || isNaN(nMinusRFact)) {
+                 resultDiv.innerText = 'Error: Calculation out of range.';
+                 return;
+            }
+
+            const result = nFact / nMinusRFact;
+
+            resultDiv.innerText = `Result: ${result}`;
+        }
+
+        // --- Stats Lists Logic (Helper functions for descriptive stats) ---
+
+        /**
+         * Calculates the mean (average) of a list of numbers.
+         * @param {number[]} data The array of numbers.
+         * @returns {number} The mean.
+         */
+        function getMean(data) {
+            if (data.length === 0) return 0;
+            const sum = data.reduce((a, b) => a + b, 0);
+            return sum / data.length;
+        }
+
+        /**
+         * Calculates the sample standard deviation of a list of numbers.
+         * @param {number[]} data The array of numbers.
+         * @returns {number} The sample standard deviation.
+         */
+        function getSampleStandardDeviation(data) {
+            if (data.length < 2) return 0;
+            const mean = getMean(data);
+            const sumOfSquares = data.reduce((sum, value) => sum + Math.pow(value - mean, 2), 0);
+            const variance = sumOfSquares / (data.length - 1);
+            return Math.sqrt(variance);
+        }
+
+        /**
+         * Calculates the median of a sorted list of numbers.
+         * @param {number[]} data The array of numbers, which must be sorted.
+         * @returns {number} The median.
+         */
+        function getMedian(data) {
+            const mid = Math.floor(data.length / 2);
+            if (data.length % 2 === 0) {
+                return (data[mid - 1] + data[mid]) / 2;
+            } else {
+                return data[mid];
+            }
+        }
+
+        /**
+         * Calculates the mode(s) of a list of numbers.
+         * @param {number[]} data The array of numbers.
+         * @returns {string} The mode(s) as a comma-separated string, or "None" if all unique.
+         */
+        function getMode(data) {
+            if (data.length === 0) return "None";
+
+            const counts = {};
+            let maxCount = 0;
+
+            // Count frequencies
+            data.forEach(value => {
+                // Use string representation for map keys to group decimals accurately
+                const key = String(value);
+                counts[key] = (counts[key] || 0) + 1;
+                if (counts[key] > maxCount) {
+                    maxCount = counts[key];
+                }
+            });
+
+            // If maxCount is 1, there is no mode (or all are modes, but generally reported as None)
+            if (maxCount <= 1) {
+                return "None";
+            }
+
+            // Collect all numbers that match the max frequency
+            const modes = [];
+            for (const key in counts) {
+                if (counts[key] === maxCount) {
+                    modes.push(key);
+                }
+            }
+
+            return modes.join(', ');
+        }
+
+        /**
+         * Calculates the quartile of a sorted list of numbers.
+         * @param {number[]} data The array of numbers, which must be sorted.
+         * @param {number} percentile The percentile to calculate (e.g., 0.25 for Q1, 0.75 for Q3).
+         * @returns {number} The quartile value.
+         */
+        function getQuartile(data, percentile) {
+            const index = percentile * (data.length - 1);
+            const lowerIndex = Math.floor(index);
+            const upperIndex = Math.ceil(index);
+            if (lowerIndex === upperIndex) {
+                return data[lowerIndex];
+            }
+            const lowerValue = data[lowerIndex];
+            const upperValue = data[upperIndex];
+            const interpolation = (index - lowerIndex) * (upperValue - lowerValue);
+            return lowerValue + interpolation;
+        }
+
+        /**
+         * Calculates the population standard deviation of a list of numbers.
+         * @param {number[]} data The array of numbers.
+         * @returns {number} The population standard deviation.
+         */
+        function getPopStandardDeviation(data) {
+            if (data.length === 0) return 0;
+            const mean = getMean(data);
+            const sumOfSquares = data.reduce((sum, value) => sum + Math.pow(value - mean, 2), 0);
+            const variance = sumOfSquares / data.length;
+            return Math.sqrt(variance);
+        }
+        
+        /**
+         * Calculates the standard deviation for the given array of data (S_x or S_y).
+         * Uses the same formula as getSampleStandardDeviation.
+         * @param {number[]} data The array of numbers.
+         * @returns {number} The sample standard deviation.
+         */
+        function getStdDev(data) {
+            return getSampleStandardDeviation(data);
+        }
+
+        // --- Stats Lists Logic (Implementation using helpers) ---
+        
+        /**
+         * Hides the single-button grid and shows the 1-Var Stats options menu.
+         */
+        function showOneVarStatsOptions() {
+            document.getElementById('stats-buttons').classList.add('hidden');
+            document.getElementById('stats-options').classList.remove('hidden');
+            document.getElementById('stats-results').innerHTML = '<p>Please select a data type for calculation.</p>';
+        }
+
+        /**
+         * Hides the 1-Var Stats options menu and shows the single-button grid.
+         */
+        function showStatsButtons() {
+            document.getElementById('stats-options').classList.add('hidden');
+            document.getElementById('stats-buttons').classList.remove('hidden');
+            document.getElementById('stats-results').innerHTML = '<p>Enter your data into the L1 and L2 lists above to get started.</p>';
+        }
+
+        /**
+         * Clears all input fields in the specified list.
+         * @param {string} listName The name of the list to clear ('l1' or 'l2').
+         */
+        function clearList(listName) {
+            // FIX: Access elements using querySelectorAll directly as dynamic content may delay availability
+            const inputs = document.querySelectorAll(`.stats-input-${listName}`);
+            inputs.forEach(input => {
+                input.value = '';
+            });
+            document.getElementById('stats-results').innerHTML = '<p>Enter your data into the L1 and L2 lists above to get started.</p>';
+        }
+
+        /**
+         * Sorts the input fields of a specified list in ascending order.
+         * @param {string} listName The name of the list to sort ('l1' or 'l2').
+         */
+        function sortList(listName) {
+            // FIX: Access elements using querySelectorAll directly
+            const inputs = document.querySelectorAll(`.stats-input-${listName}`);
+            const values = Array.from(inputs)
+                .map(input => parseFloat(input.value))
+                .filter(value => !isNaN(value));
+
+            values.sort((a, b) => a - b);
+
+            inputs.forEach((input, index) => {
+                // Ensure only the valid number of inputs receive sorted data
+                input.value = values[index] !== undefined ? values[index] : '';
+            });
+        }
+
+
+        /**
+         * Calculates and displays statistical measures for a single list of numbers (L1).
+         */
+        function calculateSingleListStats() {
+            const resultDiv = document.getElementById('stats-results');
+            const l1Inputs = document.querySelectorAll('.stats-input-l1');
+
+            const numbers = [];
+            l1Inputs.forEach(input => {
+                const value = parseFloat(input.value);
+                if (!isNaN(value)) {
+                    numbers.push(value);
+                }
+            });
+
+            if (numbers.length === 0) {
+                resultDiv.innerHTML = '<p class="text-red-500">Error: No valid numbers entered in L1. Please enter data into the list.</p>';
+                return;
+            }
+
+            // Sort the numbers for median and quartile calculation
+            numbers.sort((a, b) => a - b);
+
+            const count = numbers.length;
+            const mean = getMean(numbers);
+            const min = numbers[0];
+            const max = numbers[count - 1];
+            const range = max - min; // New calculation
+            const modes = getMode(numbers); // New calculation
+            const q1 = getQuartile(numbers, 0.25);
+            const median = getMedian(numbers);
+            const q3 = getQuartile(numbers, 0.75);
+            const sampleStdDev = getSampleStandardDeviation(numbers);
+            const popStdDev = getPopStandardDeviation(numbers);
+
+            let html = `
+                <h3 class="text-xl font-bold">1-Var Stats (L1)</h3>
+                <p><strong>Count (n):</strong> ${count}</p>
+                <p><strong>Mean (x̄):</strong> ${mean.toFixed(4)}</p>
+                <p><strong>Mode(s):</strong> ${modes}</p>
+                <p><strong>Sample Standard Deviation (Sₓ):</strong> ${sampleStdDev.toFixed(4)}</p>
+                <p><strong>Population Standard Deviation (σₓ):</strong> ${popStdDev.toFixed(4)}</p>
+                <hr class="my-4 border-gray-300">
+                <p><strong>Min:</strong> ${min}</p>
+                <p><strong>Q1:</strong> ${q1.toFixed(4)}</p>
+                <p><strong>Median:</strong> ${median.toFixed(4)}</p>
+                <p><strong>Q3:</strong> ${q3.toFixed(4)}</p>
+                <p><strong>Max:</strong> ${max}</p>
+                <p><strong>Range:</strong> ${range.toFixed(4)}</p>
+            `;
+
+            resultDiv.innerHTML = html;
+        }
+
+        /**
+         * Calculates and displays statistical measures for grouped data (L1 = values, L2 = frequencies).
+         */
+        function calculateGroupedDataStats() {
+            const resultDiv = document.getElementById('stats-results');
+            const l1Inputs = document.querySelectorAll('.stats-input-l1');
+            const l2Inputs = document.querySelectorAll('.stats-input-l2');
+
+            const values = [];
+            const frequencies = [];
+            let totalCount = 0;
+            let sumOfProducts = 0;
+
+            // Collect valid data and check for errors
+            for (let i = 0; i < l1Inputs.length; i++) {
+                const value = parseFloat(l1Inputs[i].value);
+                const freq = parseFloat(l2Inputs[i].value);
+
+                if (!isNaN(value) && !isNaN(freq)) {
+                    if (freq < 0) {
+                        resultDiv.innerHTML = '<p class="text-red-500">Error: Frequencies must be non-negative numbers.</p>';
+                        return;
+                    }
+                    values.push(value);
+                    frequencies.push(freq);
+                    totalCount += freq;
+                    sumOfProducts += value * freq;
+                } else if (!isNaN(value) || !isNaN(freq)) {
+                    // One value is entered but the other isn't on the same row
+                    resultDiv.innerHTML = '<p class="text-red-500">Error: All data and frequency pairs must be entered together.</p>';
+                    return;
+                }
+            }
+
+            if (totalCount === 0) {
+                 resultDiv.innerHTML = '<p class="text-red-500">Error: No valid data entered. Please enter at least one data and frequency pair.</p>';
+                 return;
+            }
+
+            const mean = sumOfProducts / totalCount;
+
+            // Calculate variance for standard deviation
+            let sumOfSquaredDifferences = 0;
+            for (let i = 0; i < values.length; i++) {
+                sumOfSquaredDifferences += frequencies[i] * Math.pow(values[i] - mean, 2);
+            }
+
+            const sampleStdDev = totalCount > 1 ? Math.sqrt(sumOfSquaredDifferences / (totalCount - 1)) : 0;
+            const popStdDev = Math.sqrt(sumOfSquaredDifferences / totalCount);
+
+            let html = `
+                <h3 class="text-xl font-bold">1-Var Stats (Grouped Data)</h3>
+                <p><strong>Count (n):</strong> ${totalCount}</p>
+                <p><strong>Mean (x̄):</strong> ${mean.toFixed(4)}</p>
+                <p><strong>Sample Standard Deviation (Sₓ):</strong> ${sampleStdDev.toFixed(4)}</p>
+                <p><strong>Population Standard Deviation (σₓ):</strong> ${popStdDev.toFixed(4)}</p>
+            `;
+
+            resultDiv.innerHTML = html;
+        }
+
+        /**
+         * Calculates Linear Regression (Line of Least Squares).
+         */
+        function calculateLinearRegression() {
+            const resultDiv = document.getElementById('stats-results');
+            const l1Inputs = document.querySelectorAll('.stats-input-l1');
+            const l2Inputs = document.querySelectorAll('.stats-input-l2');
+
+            // 1. Collect paired data
+            const xData = [];
+            const yData = [];
+            
+            for (let i = 0; i < l1Inputs.length; i++) {
+                const xVal = parseFloat(l1Inputs[i].value);
+                const yVal = parseFloat(l2Inputs[i].value);
+
+                // Only include rows where BOTH L1 and L2 have valid numbers
+                if (!isNaN(xVal) && !isNaN(yVal)) {
+                    xData.push(xVal);
+                    yData.push(yVal);
+                } else if (!isNaN(xVal) || !isNaN(yVal)) {
+                    // One value is entered but the other isn't on the same row - show error
+                    resultDiv.innerHTML = '<p class="text-red-500">Error: For regression, all X and Y values must be entered in corresponding rows (L1 and L2).</p>';
+                    return;
+                }
+            }
+
+            const n = xData.length;
+
+            if (n < 2) {
+                resultDiv.innerHTML = '<p class="text-red-500">Error: Linear Regression requires at least 2 complete data pairs (X, Y) in L1 and L2.</p>';
+                return;
+            }
+
+            // 2. Calculate means and standard deviations
+            const meanX = getMean(xData);
+            const meanY = getMean(yData);
+            const sX = getStdDev(xData);
+            const sY = getStdDev(yData);
+
+            // 3. Calculate Pearson's Correlation Coefficient (r)
+            let sumZProduct = 0;
+            for (let i = 0; i < n; i++) {
+                const zX = sX !== 0 ? (xData[i] - meanX) / sX : 0;
+                const zY = sY !== 0 ? (yData[i] - meanY) / sY : 0;
+                sumZProduct += zX * zY;
+            }
+            const r = sumZProduct / (n - 1);
+            
+            // Check for perfect correlation (vertical/horizontal line division by zero)
+            if (sX === 0) {
+                 resultDiv.innerHTML = '<h3 class="text-xl font-bold">Linear Regression Results</h3><p class="text-red-500">Error: All X-values are the same. Cannot calculate slope (vertical line).</p><p><strong>Correlation (r):</strong> 0 (Undefined slope)</p>';
+                 return;
+            }
+            if (sY === 0) {
+                 resultDiv.innerHTML = '<h3 class="text-xl font-bold">Linear Regression Results</h3><p class="text-yellow-600">Warning: All Y-values are the same.</p><p><strong>Equation:</strong> ŷ = 0.0000x + ${meanY.toFixed(4)}</p><p><strong>Correlation (r):</strong> 0</p>';
+                 return;
+            }
+            
+            // 4. Calculate Slope (a) and Intercept (b)
+            // Slope (a): a = r * (S_y / S_x)
+            const slopeA = r * (sY / sX);
+            // Intercept (b): b = meanY - a * meanX
+            const interceptB = meanY - slopeA * meanX;
+
+            // 5. Display Results
+            // New logic: ŷ = ax + b, using Unicode ŷ and proper sign for intercept
+            const interceptDisplay = interceptB >= 0 ? ` + ${interceptB.toFixed(4)}` : ` - ${Math.abs(interceptB).toFixed(4)}`;
+            
+            let formattedEquation = `ŷ = ${slopeA.toFixed(4)}x${interceptDisplay}`;
+            
+            resultDiv.innerHTML = `
+                <h3 class="text-xl font-bold">Linear Regression Results</h3>
+                <p><strong>Sample Size (n):</strong> ${n}</p>
+                <p><strong>Mean X (x̄):</strong> ${meanX.toFixed(4)}</p>
+                <p><strong>Mean Y (ȳ):</strong> ${meanY.toFixed(4)}</p>
+                <hr class="my-4 border-gray-300">
+                <p class="font-bold"><strong>Correlation Coefficient (r):</strong> ${r.toFixed(4)}</p>
+                <p><strong>Slope (a):</strong> ${slopeA.toFixed(4)}</p>
+                <p><strong>Y-Intercept (b):</strong> ${interceptB.toFixed(4)}</p>
+                <hr class="my-4 border-gray-300">
+                <p class="text-lg font-bold text-blue-700"><strong>Least Squares Line:</strong> ${formattedEquation}</p>
+            `;
+        }
+        
+        // --- Distribution Logic ---
+        
+        /**
+         * Toggles between the distribution selection menu and the specific calculators.
+         */
+        function showDistribution(type) {
+            const selectDiv = document.getElementById('dist-select');
+            const normalDiv = document.getElementById('normal-calc');
+            const binomialDiv = document.getElementById('binomial-calc');
+            const normalResultsDiv = document.getElementById('normal-dist-results');
+            const binomialStatsDiv = document.getElementById('binomial-stats-results');
+
+
+            selectDiv.classList.add('hidden');
+            normalDiv.classList.add('hidden');
+            binomialDiv.classList.add('hidden');
+            normalResultsDiv.innerHTML = '<p>Enter the parameters and values to calculate the probability.</p>';
+            binomialStatsDiv.innerHTML = '<p>Click \'Calculate Probability\' to see results.</p>';
+
+
+            if (type === 'normal') {
+                normalDiv.classList.remove('hidden');
+                showNormalCalcOption('options'); // Initialize to show options menu
+            } else if (type === 'binomial') {
+                binomialDiv.classList.remove('hidden');
+                // Re-initialize binomial inputs on show, and re-bind event listener if needed
+                updateBinomialInputs(); 
+            } else { // 'select'
+                selectDiv.classList.remove('hidden');
+            }
+        }
+
+        /**
+         * Toggles the specific calculation options within the Normal Distribution tab.
+         */
+        function showNormalCalcOption(option) {
+            const optionsDiv = document.getElementById('normal-options');
+            const zScoreDiv = document.getElementById('z-score-calc');
+            const probDiv = document.getElementById('probability-calc');
+            const percentileDiv = document.getElementById('percentile-calc');
+            const resultsDiv = document.getElementById('normal-dist-results');
+
+            optionsDiv.classList.add('hidden');
+            zScoreDiv.classList.add('hidden');
+            probDiv.classList.add('hidden');
+            percentileDiv.classList.add('hidden');
+            resultsDiv.innerHTML = '<p>Enter the parameters and values to calculate the probability.</p>';
+
+            if (option === 'z-score') {
+                zScoreDiv.classList.remove('hidden');
+            } else if (option === 'probability') {
+                probDiv.classList.remove('hidden');
+                // Ensure event listener is set for probability type select
+                document.getElementById('prob-type-select').removeEventListener('change', updateProbInputs); // Remove existing one
+                document.getElementById('prob-type-select').addEventListener('change', updateProbInputs); // Add a clean one
+                updateProbInputs(); // Initial setup
+            } else if (option === 'percentile') {
+                percentileDiv.classList.remove('hidden');
+            } else { // 'options'
+                optionsDiv.classList.remove('hidden');
+            }
+        }
+        
+        /**
+         * Toggles the single-value or between-value input fields in the Normal Probability section.
+         */
+        function updateProbInputs() {
+            const probType = document.getElementById('prob-type-select').value;
+            const singleInputDiv = document.getElementById('prob-single-value-input');
+            const betweenInputDiv = document.getElementById('prob-between-values-input');
+
+            if (probType === 'between') {
+                singleInputDiv.classList.add('hidden');
+                betweenInputDiv.classList.remove('hidden');
+            } else {
+                singleInputDiv.classList.remove('hidden');
+                betweenInputDiv.classList.add('hidden');
+            }
+        }
+
+        // --- Z-Distribution Functions (Unchanged) ---
+        function erf(x) {
+            // Abramowitz & Stegun approximation
+            const sign = x >= 0 ? 1 : -1;
+            x = Math.abs(x);
+            const a1 = 0.254829592, a2 = -0.284496736, a3 = 1.421413741;
+            const a4 = -1.453152027, a5 = 1.061405429, p = 0.3275911;
+            const t = 1 / (1 + p * x);
+            const y = 1 - ((((a5 * t + a4) * t + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
+            return sign * y;
+        }
+
+        function normalCDF(z) {
+            return 0.5 * (1 + erf(z / Math.SQRT2));
+        }
+
+        function normalPDF(z) {
+            return Math.exp(-0.5 * z * z) / Math.sqrt(2 * Math.PI);
+        }
+
+        function normalInvCDF(p) {
+            // Added high precision check for stability when p is near 0 or 1
+            if (!(p > 1e-15 && p < 1 - 1e-15)) {
+                 if (p <= 1e-15) return -Infinity;
+                 if (p >= 1 - 1e-15) return Infinity;
+            }
+
+            // Coefficients (Acklam)
+            const a = [-3.969683028665376e+01,  2.209460984245205e+02,
+                        -2.759285104469687e+02,  1.383577518672690e+02,
+                        -3.066479806614716e+01,  2.506628277459239e+00];
+
+            const b = [-5.447609879822406e+01,  1.615858368580409e+02,
+                        -1.556989798598866e+02,  6.680131188771972e+01,
+                        -1.328068155288572e+01];
+
+            const c = [-7.784894002430293e-03, -3.223964580411365e-01,
+                        -2.400758277161838e+00, -2.549732539343734e+00,
+                        4.374664141464968e+00,  2.938163982698783e+00];
+
+            const d = [ 7.784695709041462e-03,  3.224671290700398e-01,
+                        2.445134137142996e+00,  3.754408661907416e+00];
+            
+            const plow  = 0.02425;
+            const phigh = 1 - plow;
+            let q, r, x;
+
+            if (p < plow) {
+                // lower region
+                q = Math.sqrt(-2 * Math.log(p));
+                x = (((((c[0]*q + c[1])*q + c[2])*q + c[3])*q + c[4])*q + c[5]) /
+                    ((((d[0]*q + d[1])*q + d[2])*q + d[3])*q + 1);
+                x = -x;
+            } else if (phigh < p) {
+                // upper region
+                q = Math.sqrt(-2 * Math.log(1 - p));
+                x = (((((c[0]*q + c[1])*q + c[2])*q + c[3])*q + c[4])*q + c[5]) /
+                    ((((d[0]*q + d[1])*q + d[2])*q + d[3])*q + 1);
+                // x stays positive
+            } else {
+                // central region
+                q = p - 0.5;
+                r = q * q;
+                x = (((((a[0]*r + a[1])*r + a[2])*r + a[3])*r + a[4])*r + a[5]) * q /
+                    (((((b[0]*r + b[1])*r + b[2])*r + b[3])*r + b[4])*r + 1);
+            }
+
+            // Newton-Raphson refinement (1-2 iterations) to improve tail accuracy
+            for (let i = 0; i < 2; i++) {
+                let error = normalCDF(x) - p;
+                let density = normalPDF(x);
+                
+                // Using 1e-10 as a cutoff for density to prevent division by near-zero.
+                if (Math.abs(density) < 1e-10) break;  
+                
+                x = x - error / density;
+                if (Math.abs(error) < 1e-8) break; // Convergence check
+            }
+
+            return x;
+        }
+
+        // --- T-Distribution CDF Functions (STABLE VERSION PROVIDED BY USER) ---
+
+        function continuedFraction(x, a, b) {
+            const maxIter = 200;
+            const epsilon = 1e-10;
+            
+            const qab = a + b;
+            const qap = a + 1;
+            const qam = a - 1;
+            let c = 1;
+            let d = 1 - qab * x / qap;
+            
+            if (Math.abs(d) < 1e-30) d = 1e-30;
+            d = 1 / d;
+            let h = d;
+            
+            for (let m = 1; m <= maxIter; m++) {
+                const m2 = 2 * m;
+                // a_{2m-1}
+                let aa = m * (b - m) * x / ((qam + m2) * (a + m2));
+                d = 1 + aa * d;
+                if (Math.abs(d) < 1e-30) d = 1e-30;
+                c = 1 + aa / c;
+                if (Math.abs(c) < 1e-30) c = 1e-30;
+                d = 1 / d;
+                h *= d * c;
+                
+                // a_{2m}
+                aa = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2));
+                d = 1 + aa * d;
+                if (Math.abs(d) < 1e-30) d = 1e-30;
+                c = 1 + aa / c;
+                if (Math.abs(c) < 1e-30) c = 1e-30;
+                d = 1 / d;
+                const del = d * c;
+                h *= del;
+                
+                if (Math.abs(del - 1) < epsilon) break;
+            }
+            
+            return h;
+        }
+
+        function incompleteBeta(x, a, b) {
+            // Regularized Incomplete Beta Function I_x(a,b)
+            if (x <= 0) return 0;
+            if (x >= 1) return 1;
+            
+            const lbeta = logGamma(a) + logGamma(b) - logGamma(a + b);
+            const front = Math.exp(a * Math.log(x) + b * Math.log(1 - x) - lbeta) / a;
+            
+            const cf = continuedFraction(x, a, b);
+            
+            return front * cf;
+        }
+
+        function tDistributionCDF(t, df) {
+            // Approximation of the cumulative distribution function for t-distribution
+            // Using the incomplete beta function relationship
+            if (df <= 0) return NaN;
+            
+            const x = df / (df + t * t);
+            const a = df / 2;
+            const b = 0.5;
+            
+            const betaValue = incompleteBeta(x, a, b);
+
+            if (t >= 0) {
+                // P(T <= t) = 1 - 0.5 * I_x(df/2, 0.5)
+                return 1 - 0.5 * betaValue; 
+            } else {
+                // P(T <= t) = 0.5 * I_x(df/2, 0.5)
+                return 0.5 * betaValue;
+            }
+        }
+
+        /**
+         * Numerically approximates the inverse t-distribution CDF (T-Critical Value).
+         */
+        function tInvCDF(p, df) {
+            if (df <= 0) return NaN;
+            if (p <= 0) return -Infinity;
+            if (p >= 1) return Infinity;
+
+            const tCDF = (t, df) => tDistributionCDF(t, df);
+
+            // Initial guess (using Normal approx)
+            let t = normalInvCDF(p);
+
+            // T-distribution PDF (needed for Newton-Raphson)
+            const tPDF = (t, df) => {
+                const inner = (1 + (t * t) / df);
+                const exponent = -(df + 1) / 2;
+                const betaFn = Math.exp(logGamma(df / 2) + logGamma(0.5) - logGamma((df + 1) / 2));
+                return (1 / (Math.sqrt(df) * betaFn)) * Math.pow(inner, exponent);
+            };
+
+            // Newton-Raphson iteration
+            for (let i = 0; i < 50; i++) {
+                let error = tCDF(t, df) - p;
+                let density = tPDF(t, df);
+                
+                // Avoid division by zero/near-zero density in the tails
+                if (Math.abs(density) < 1e-10) break;  
+                
+                t = t - error / density;
+                if (Math.abs(error) < 1e-8) break; // Convergence check
+            }
+
+            return t;
+        }
+
+
+        // --- Z-Score Calculation Logic (Unchanged) ---
+        function calculateZScore() {
+            const resultDiv = document.getElementById('normal-dist-results'); // WCAG FIX: Using unique ID
+            const x = parseFloat(document.getElementById('z-score-x-input').value);
+            const mean = parseFloat(document.getElementById('z-score-mean-input').value);
+            const stdDev = parseFloat(document.getElementById('z-score-std-dev-input').value);
+
+            if (isNaN(x) || isNaN(mean) || isNaN(stdDev) || stdDev <= 0) {
+                resultDiv.innerHTML = '<p class="text-red-500">Error: Please enter valid numbers for X, Mean, and Standard Deviation (must be > 0).</p>';
+                return;
+            }
+
+            const zScore = (x - mean) / stdDev;
+            resultDiv.innerHTML = `
+                <p><strong>X-Value:</strong> ${x}</p>
+                <p><strong>Mean:</strong> ${mean}</p>
+                <p><strong>Standard Deviation:</strong> ${stdDev}</p>
+                <hr class="my-4 border-gray-300">
+                <p><strong>Z-Score:</strong> ${zScore.toFixed(4)}</p>
+            `;
+        }
+        
+        // --- Normal Probability Calculation Logic (Unchanged) ---
+        function calculateNormalProbability() {
+            const resultDiv = document.getElementById('normal-dist-results'); // WCAG FIX: Using unique ID
+            const mean = parseFloat(document.getElementById('prob-mean-input').value);
+            const stdDev = parseFloat(document.getElementById('prob-std-dev-input').value);
+            const n = parseFloat(document.getElementById('prob-n-input').value);
+            const probType = document.getElementById('prob-type-select').value;
+
+            // Basic input validation
+            if (isNaN(mean) || isNaN(stdDev) || stdDev <= 0 || isNaN(n) || n < 1 || !Number.isInteger(n)) {
+                resultDiv.innerHTML = '<p class="text-red-500">Error: Please enter valid numbers for Mean and Standard Deviation (must be > 0), and a positive integer for Sample Size (n).</p>';
+                return;
+            }
+
+            // Apply the Central Limit Theorem
+            const standardError = stdDev / Math.sqrt(n);
+
+            let prob = 0;
+            let zScore;
+
+            if (probType === 'less-than') {
+                const x = parseFloat(document.getElementById('prob-x-input').value);
+                if (isNaN(x)) {
+                    resultDiv.innerHTML = '<p class="text-red-500">Error: Please enter a valid X-Value.</p>';
+                    return;
+                }
+                zScore = (x - mean) / standardError;
+                prob = normalCDF(zScore);
+                resultDiv.innerHTML = `
+                    <p><strong>Z-Score:</strong> ${zScore.toFixed(4)}</p>
+                    <p><strong>Standard Error (σ / √n):</strong> ${standardError.toFixed(4)}</p>
+                    <p><strong>Probability P(X < ${x}):</strong> ${prob.toFixed(4)}</p>
+                `;
+            } else if (probType === 'greater-than') {
+                const x = parseFloat(document.getElementById('prob-x-input').value);
+                if (isNaN(x)) {
+                    resultDiv.innerHTML = '<p class="text-red-500">Error: Please enter a valid X-Value.</p>';
+                    return;
+                }
+                zScore = (x - mean) / standardError;
+                prob = 1 - normalCDF(zScore);
+                resultDiv.innerHTML = `
+                    <p><strong>Z-Score:</strong> ${zScore.toFixed(4)}</p>
+                    <p><strong>Standard Error (σ / √n):</strong> ${standardError.toFixed(4)}</p>
+                    <p><strong>Probability P(X > ${x}):</strong> ${prob.toFixed(4)}</p>
+                `;
+            } else if (probType === 'between') {
+                const a = parseFloat(document.getElementById('prob-a-input').value);
+                const b = parseFloat(document.getElementById('prob-b-input').value);
+                if (isNaN(a) || isNaN(b) || a > b) {
+                    resultDiv.innerHTML = '<p class="text-red-500">Error: Please enter valid values for A and B where B ≥ A.</p>';
+                    return;
+                }
+                const zScoreA = (a - mean) / standardError;
+                const zScoreB = (b - mean) / standardError;
+                const probA = normalCDF(zScoreA);
+                const probB = normalCDF(zScoreB);
+                prob = probB - probA;
+                resultDiv.innerHTML = `
+                    <p><strong>Z-Score for A:</strong> ${zScoreA.toFixed(4)}</p>
+                    <p><strong>Z-Score for B:</strong> ${zScoreB.toFixed(4)}</p>
+                    <p><strong>Standard Error (σ / √n):</strong> ${standardError.toFixed(4)}</p>
+                    <p><strong>Probability P(${a} < X < ${b}):</strong> ${prob.toFixed(4)}</p>
+                `;
+            }
+        }
+
+        // --- Percentile/Value Calculation Logic (Unchanged) ---
+        function calculatePercentile() {
+            const resultDiv = document.getElementById('normal-dist-results'); // WCAG FIX: Using unique ID
+            const mean = parseFloat(document.getElementById('percentile-mean-input').value);
+            const stdDev = parseFloat(document.getElementById('percentile-std-dev-input').value);
+            const areaType = document.getElementById('percentile-type-select').value;
+            const prob = parseFloat(document.getElementById('percentile-prob-input').value);
+
+            if (isNaN(prob) || isNaN(mean) || isNaN(stdDev) || stdDev <= 0 || prob <= 0 || prob >= 1) {
+                resultDiv.innerHTML = '<p class="text-red-500">Error: Please enter a valid area/probability (between 0 and 1) and valid mean/standard deviation (must be > 0).</p>';
+                return;
+            }
+
+            try {
+                let xValue;
+                if (areaType === 'less-than') {
+                    const zScore = normalInvCDF(prob);
+                    xValue = mean + zScore * stdDev;
+                    resultDiv.innerHTML = `
+                        <p><strong>Resulting X-Value:</strong> ${xValue.toFixed(4)}</p>
+                    `;
+                } else if (areaType === 'greater-than') {
+                    const zScore = normalInvCDF(1 - prob);
+                    xValue = mean + zScore * stdDev;
+                    resultDiv.innerHTML = `
+                        <p><strong>Resulting X-Value:</strong> ${xValue.toFixed(4)}</p>
+                    `;
+                } else if (areaType === 'between') {
+                    const alpha = 1 - prob;
+                    const zScoreLower = normalInvCDF(alpha / 2);
+                    const xValueLower = mean + zScoreLower * stdDev;
+                    const zScoreUpper = normalInvCDF(1 - alpha / 2);
+                    const xValueUpper = mean + zScoreUpper * stdDev;
+                    resultDiv.innerHTML = `
+                        <p><strong>Lower X-Value:</strong> ${xValueLower.toFixed(4)}</p>
+                        <p><strong>Upper X-Value:</strong> ${xValueUpper.toFixed(4)}</p>
+                    `;
+                }
+            } catch (e) {
+                resultsDiv.innerHTML = `<p class="text-red-500">Calculation Error: ${e.message}</p>`;
+            }
+        }
+
+        // --- Binomial Helper Functions (Unchanged) ---
+
+        /**
+         * Calculates the binomial coefficient "n choose k" (C(n, k)).
+         * Uses an iterative method to avoid massive intermediate factorial numbers.
+         * @param {number} n Total number of trials.
+         * @param {number} k Number of successful trials.
+         * @returns {number} The binomial coefficient.
+         */
+        function getBinomialCoefficient(n, k) {
+            if (k < 0 || k > n) {
+                return 0;
+            }
+            if (k === 0 || k === n) {
+                return 1;
+            }
+            // Use symmetry C(n, k) = C(n, n-k) to minimize iterations
+            if (k > n / 2) {
+                k = n - k;
+            }
+            let res = 1;
+            for (let i = 1; i <= k; i++) {
+                // Calculation: res * (n - i + 1) / i
+                res = (res * (n - i + 1)) / i;
+            }
+            return res;
+        };
+
+        /**
+         * Calculates the Binomial Probability Mass Function (PMF). P(X = x).
+         * @param {number} n Total number of trials.
+         * @param {number} x Number of successes.
+         * @param {number} p Probability of success.
+         * @returns {number} The probability of exactly x successes.
+         */
+        const binomialPMF = (n, x, p) => {
+            const combinations = getBinomialCoefficient(n, x);
+            return combinations * Math.pow(p, x) * Math.pow(1 - p, n - x);
+        };
+
+        // --- Binomial Probability Calculation Logic (Unchanged) ---
+        function calculateBinomialProbability() {
+            const statsDiv = document.getElementById('binomial-stats-results');
+
+            try {
+                const n = parseInt(document.getElementById('binomial-n-input').value);
+                const p = parseFloat(document.getElementById('binomial-p-input').value);
+                const probType = document.getElementById('binomial-type-select').value;
+
+                // --- Validation and Mean/SD Calculation ---
+                if (isNaN(n) || n < 0 || !Number.isInteger(n)) {
+                    statsDiv.innerHTML = '<p class="text-red-500">Error: Number of Trials (n) must be a non-negative integer.</p>';
+                    return;
+                }
+                if (isNaN(p) || p < 0 || p > 1) {
+                    statsDiv.innerHTML = '<p class="text-red-500">Error: Probability of Success (p) must be between 0 and 1.</p>';
+                    return;
+                }
+
+                const mean = n * p;
+                const stdDev = Math.sqrt(n * p * (1 - p));
+
+                // --- Probability Calculation ---
+                let a, b;
+                let probText = '';
+                let finalProb = 0;
+
+                // Input validation for a and b based on selection
+                if (probType === 'exactly' || probType === 'less-or-equal' || probType === 'greater-or-equal') {
+                    a = parseInt(document.getElementById('binomial-a-input').value);
+                    if (isNaN(a) || !Number.isInteger(a) || a < 0 || a > n) {
+                        statsDiv.innerHTML = `<p class="text-red-500">Error: Value 'a' must be an integer between 0 and ${n}.</p>`;
+                        return;
+                    }
+                } else if (probType === 'between') {
+                    a = parseInt(document.getElementById('binomial-a-input-between').value);
+                    b = parseInt(document.getElementById('binomial-b-input-between').value);
+
+                    if (isNaN(a) || isNaN(b) || !Number.isInteger(a) || !Number.isInteger(b) || a < 0 || b < 0 || a > n || b > n) {
+                         statsDiv.innerHTML = `<p class="text-red-500">Error: Values 'a' and 'b' must be integers between 0 and ${n}.</p>`;
+                        return;
+                    }
+                }
+
+                if (probType === 'exactly') {
+                    finalProb = binomialPMF(n, a, p);
+                    probText = `P(X = ${a}):`;
+                } else if (probType === 'less-or-equal') {
+                    // Cumulative probability P(X ≤ a)
+                    for (let i = 0; i <= a; i++) {
+                        finalProb += binomialPMF(n, i, p);
+                    }
+                    probText = `P(X ≤ ${a}):`;
+                } else if (probType === 'greater-or-equal') {
+                    // Cumulative probability P(X ≥ a)
+                    for (let i = a; i <= n; i++) {
+                        finalProb += binomialPMF(n, i, p);
+                    }
+                    probText = `P(X ≥ ${a}):`;
+                } else if (probType === 'between') {
+                    // Probability P(a ≤ X ≤ b). Ensure a is the lower bound and b is the upper bound.
+                    let lower = Math.min(a, b);
+                    let upper = Math.max(a, b);
+
+                    for (let i = lower; i <= upper; i++) {
+                        finalProb += binomialPMF(n, i, p);
+                    }
+                    probText = `P(${lower} ≤ X ≤ ${upper}):`;
+                }
+
+                // Clean up tiny floating point errors that result in > 1 or < 0
+                if (finalProb < 1e-12) finalProb = 0;
+                if (finalProb > 1) finalProb = 1;
+
+                // --- Display Combined Results to the stats box ---
+                statsDiv.innerHTML = `
+                    <h4 class="text-xl font-bold text-gray-800">Binomial Distribution Summary</h4>
+                    <p><strong>n:</strong> ${n}</p>
+                    <p><strong>p:</strong> ${p}</p>
+                    <hr class="my-2 border-gray-300">
+                    <p><strong>Mean (μ):</strong> ${mean.toFixed(4)}</p>
+                    <p><strong>Standard Deviation (σ):</strong> ${stdDev.toFixed(4)}</p>
+                    <hr class="my-2 border-gray-300">
+                    <p><strong>${probText}</strong> ${formatProb(finalProb)}</p>
+                    <p><strong>As %:</strong> ${(finalProb * 100).toFixed(6)}%</p>
+                `;
+            } catch (e) {
+                // Catch and display any execution errors that prevented the result from showing
+                statsDiv.innerHTML = `<p class="text-red-500">Calculation Error: ${e.message}</p>`;
+            }
+        }
+
+        // --- Event Listeners for Binomial Distribution (MODIFIED) ---
+
+        function updateBinomialInputs() {
+            const probType = document.getElementById('binomial-type-select').value;
+            const singleInputDiv = document.getElementById('binomial-single-value-input');
+            const betweenInputDiv = document.getElementById('binomial-between-values-input');
+
+            // --- FIX: Clear input values to prevent screen reader "invalid entry" messages ---
+            document.getElementById('binomial-a-input').value = '';
+            document.getElementById('binomial-a-input-between').value = '';
+            document.getElementById('binomial-b-input-between').value = '';
+            // Re-apply default '5' for the 'exactly' single value, but only after clearing
+            if (probType !== 'between') {
+                 document.getElementById('binomial-a-input').value = '5';
+            }
+            // --- END FIX ---
+
+
+            if (probType === 'between') {
+                singleInputDiv.classList.add('hidden');
+                betweenInputDiv.classList.remove('hidden');
+            } else {
+                singleInputDiv.classList.remove('hidden');
+                betweenInputDiv.classList.add('hidden');
+            }
+        }
+
+        /**
+         * Toggles input fields for Proportion CI based on selection (x/n or p-hat/n).
+         */
+        function updatePropCIInputs() {
+            const method = document.getElementById('ci-prop-input-method').value;
+            document.getElementById('ci-prop-input-x-n').classList.toggle('hidden', method !== 'x_n');
+            document.getElementById('ci-prop-input-phat-n').classList.toggle('hidden', method !== 'phat_n');
+            document.getElementById('ci-results').innerHTML = '<p>Enter parameters above and click Calculate.</p>';
+        }
+
+        // --- Confidence Interval Logic (UPDATED TO INCLUDE RAW DATA OPTION) ---
+
+        /**
+         * Toggles between the CI selection menu and the specific calculators.
+         */
+        function showCIType(type) {
+            const selectDiv = document.getElementById('ci-select');
+            const meanDiv = document.getElementById('ci-mean-calc');
+            const propDiv = document.getElementById('ci-prop-calc');
+            const resultsDiv = document.getElementById('ci-results');
+
+            selectDiv.classList.add('hidden');
+            meanDiv.classList.add('hidden');
+            propDiv.classList.add('hidden');
+            resultsDiv.innerHTML = '<p>Enter parameters above and click Calculate.</p>';
+
+            if (type === 'mean') {
+                meanDiv.classList.remove('hidden');
+                // WCAG FIX: Removed hardcoded selection and relies on `checked` attribute to call it
+                const checkedRadio = document.querySelector('input[name="ci-mean-data-method"]:checked');
+                if (checkedRadio) {
+                    updateMeanCIInputFields(); 
+                }
+            } else if (type === 'proportion') {
+                propDiv.classList.remove('hidden');
+                updatePropCIInputs(); // Initialize the correct proportion inputs
+            } else {
+                selectDiv.classList.remove('hidden');
+            }
+        }
+        
+        /**
+         * Toggles the input fields between Summary Data and Raw Data (Mean CI).
+         */
+        function updateMeanCIInputFields() {
+            // WCAG FIX: Read value from the checked radio button
+            const checkedRadio = document.querySelector('input[name="ci-mean-data-method"]:checked');
+            const method = checkedRadio ? checkedRadio.value : 'summary'; // Default to summary if none checked
+            
+            document.getElementById('ci-mean-input-summary').classList.toggle('hidden', method !== 'summary');
+            document.getElementById('ci-mean-input-raw').classList.toggle('hidden', method !== 'raw');
+            document.getElementById('ci-results').innerHTML = '<p>Enter parameters above and click Calculate.</p>';
+        }
+
+        /**
+         * Calculates the T/Z-Interval for the mean (T-Interval by default, or Z for very high df).
+         * Now supports both Summary Data and Raw Data (L1) input methods.
+         */
+        function calculateMeanCI() {
+            const resultsDiv = document.getElementById('ci-results');
+            // WCAG FIX: Get method from checked radio button
+            const methodRadio = document.querySelector('input[name="ci-mean-data-method"]:checked');
+            const method = methodRadio ? methodRadio.value : 'summary';
+            resultsDiv.innerHTML = '<p>Calculating...</p>';
+
+            let xBar, s, n;
+            let cLevel;
+            let rawDataUsed = false;
+            
+            // --- 1. Gather Data & Confidence Level ---
+            if (method === 'summary') {
+                xBar = parseFloat(document.getElementById('ci-mean-xbar').value);
+                s = parseFloat(document.getElementById('ci-mean-s').value);
+                n = parseInt(document.getElementById('ci-mean-n').value);
+                cLevel = parseFloat(document.getElementById('ci-mean-c-level').value);
+            } else { // raw
+                const l1Inputs = document.querySelectorAll('.stats-input-l1');
+                const numbers = Array.from(l1Inputs)
+                    .map(input => parseFloat(input.value))
+                    .filter(value => !isNaN(value));
+
+                n = numbers.length;
+                
+                // Check for minimum data requirement
+                if (n < 2) {
+                    resultsDiv.innerHTML = '<p class="text-red-500">Error: Raw data input (L1) requires at least 2 valid numbers to calculate statistics.</p>';
+                    return;
+                }
+
+                xBar = getMean(numbers);
+                s = getSampleStandardDeviation(numbers);
+                cLevel = parseFloat(document.getElementById('ci-mean-c-level-raw').value); // Separate C-Level input for raw data
+                rawDataUsed = true;
+            }
+
+            // --- 2. Input Validation (Combined) ---
+            if (isNaN(xBar) || isNaN(s) || s < 0 || isNaN(n) || n <= 1 || !Number.isInteger(n) || isNaN(cLevel) || cLevel <= 0 || cLevel >= 1) {
+                resultsDiv.innerHTML = '<p class="text-red-500">Error: Please ensure all required fields are valid. Sample size (n) must be a positive integer > 1, Sample Std Dev (s) must be non-negative, and C-Level must be between 0 and 1.</p>';
+                return;
+            }
+
+            try {
+                const degreesOfFreedom = n - 1;
+                const areaToTheLeftOfUpperBound = 1 - (1 - cLevel) / 2;
+                let criticalValue;
+                let criticalLabel;
+                let testType;
+                
+                // Use Z-Critical for very high degrees of freedom (e.g., df > 120) for numerical stability and approximation accuracy
+                if (degreesOfFreedom > 120) { 
+                    criticalValue = normalInvCDF(areaToTheLeftOfUpperBound);
+                    criticalLabel = 'Z*';
+                    testType = 'Z-Interval';
+                } else {
+                    // Use T-Critical for lower degrees of freedom
+                    criticalValue = tInvCDF(areaToTheLeftOfUpperBound, degreesOfFreedom);
+                    criticalLabel = 't*';
+                    testType = 'T-Interval';
+                }
+                
+                // 1. Calculate Standard Error (SE)
+                const standardError = s / Math.sqrt(n);
+
+                // 2. Calculate Margin of Error (ME)
+                const marginOfError = criticalValue * standardError;
+
+                // 3. Calculate Interval
+                const lowerBound = xBar - marginOfError;
+                const upperBound = xBar + marginOfError;
+
+                // Detailed statistics block for raw data input
+                let statsDetail = '';
+                if (rawDataUsed) {
+                    statsDetail = `
+                        <h4 class="text-lg font-bold text-gray-800 mt-3">Calculated Sample Statistics (from L1)</h4>
+                        <p><strong>Sample Mean (x̄):</strong> ${xBar.toFixed(6)}</p>
+                        <p><strong>Sample Std Dev (s):</strong> ${s.toFixed(6)}</p>
+                    `;
+                }
+
+                resultsDiv.innerHTML = `
+                    <h3 class="text-xl font-bold">Mean Confidence Interval (${testType})</h3>
+                    <p><strong>Confidence Level (C):</strong> ${cLevel * 100}%</p>
+                    <p><strong>Sample Size (n):</strong> ${n}</p>
+                    ${!rawDataUsed ? `<p><strong>Sample Mean (x̄):</strong> ${xBar.toFixed(6)}</p>` : ''}
+                    ${!rawDataUsed ? `<p><strong>Sample Std Dev (s):</strong> ${s.toFixed(6)}</p>` : ''}
+                    ${rawDataUsed ? statsDetail : ''}
+                    <hr class="my-2 border-gray-300">
+                    <p><strong>Degrees of Freedom (df):</strong> ${degreesOfFreedom}</p>
+                    <p><strong>Standard Error (SE):</strong> ${standardError.toFixed(6)}</p>
+                    <p><strong>Critical ${criticalLabel}:</strong> ${criticalValue.toFixed(6)}</p>
+                    <p><strong>Margin of Error (ME):</strong> ${marginOfError.toFixed(6)}</p>
+                    <hr class="my-2 border-gray-300">
+                    <p class="text-lg font-bold"><strong>Confidence Interval (μ):</strong> (${lowerBound.toFixed(4)}, ${upperBound.toFixed(4)})</p>
+                `;
+
+            } catch (e) {
+                resultsDiv.innerHTML = `<p class="text-red-500">Calculation Error: ${e.message}</p>`;
+            }
+        }
+
+
+        /**
+         * Calculates the One Proportion Z-Interval.
+         */
+        function calculateProportionCI() {
+            const resultsDiv = document.getElementById('ci-results');
+            resultsDiv.innerHTML = '<p>Calculating...</p>';
+
+            // Read method and raw confidence level input (be permissive)
+            const method = document.getElementById('ci-prop-input-method').value;
+            const cRaw = String(document.getElementById('ci-prop-c-level').value).trim();
+
+            // Parse confidence level: accept 0.98, .98, 98, or "98%"
+            let cLevel = NaN;
+            if (cRaw.indexOf('%') !== -1) {
+                // "98%"
+                const tmp = parseFloat(cRaw.replace('%','').trim());
+                if (!isNaN(tmp)) cLevel = tmp / 100;
+            } else {
+                const tmp = parseFloat(cRaw);
+                if (!isNaN(tmp)) {
+                    // If user entered 98 assume percent entry
+                    if (tmp > 1 && tmp <= 100) cLevel = tmp / 100;
+                    else cLevel = tmp;
+                }
+            }
+
+            if (isNaN(cLevel) || cLevel <= 0 || cLevel >= 1) {
+                resultsDiv.innerHTML = '<p class="text-red-500">Error: Confidence Level (C) must be between 0 and 1 (e.g. 0.95 or 95%).</p>';
+                return;
+            }
+
+            // Parse x/n or p̂ and n depending on selected input method
+            let n = NaN, x = NaN, pHat = NaN;
+            if (method === 'x_n') {
+                x = parseFloat(document.getElementById('ci-prop-x').value);
+                n = parseFloat(document.getElementById('ci-prop-n-x').value);
+
+                if (!isFinite(x) || !isFinite(n) || n <= 0 || x < 0) {
+                    resultsDiv.innerHTML = '<p class="text-red-500">Error: Please enter valid numeric values for x and n.</p>';
+                    return;
+                }
+                // Allow non-integer x if pasted, but ensure x <= n
+                if (x > n) {
+                    resultsDiv.innerHTML = '<p class="text-red-500">Error: Number of successes x cannot exceed sample size n.</p>';
+                    return;
+                }
+                pHat = x / n;
+            } else { // phat_n
+                pHat = parseFloat(document.getElementById('ci-prop-phat').value);
+                n = parseFloat(document.getElementById('ci-prop-n-phat').value);
+
+                // Accept pHat entered as percent (e.g., 8.2 or 8.2%)
+                if (!isFinite(pHat) && typeof document.getElementById('ci-prop-phat').value === 'string') {
+                    const raw = String(document.getElementById('ci-prop-phat').value).trim();
+                    if (raw.indexOf('%') !== -1) {
+                        const tmp = parseFloat(raw.replace('%',''));
+                        if (!isNaN(tmp)) pHat = tmp / 100;
+                    }
+                }
+
+                if (!isFinite(pHat) || !isFinite(n) || n <= 0) {
+                    resultsDiv.innerHTML = '<p class="text-red-500">Error: Please enter a valid sample proportion (0–1) and sample size n.</p>';
+                    return;
+                }
+                // If user entered pHat as a percent like 8.2, convert to decimal
+                if (pHat > 1 && pHat <= 100) pHat = pHat / 100;
+                // Reconstruct x for condition checks
+                x = Math.round(pHat * n);
+            }
+
+            // Additional sanity check on pHat after parsing
+            if (!isFinite(pHat) || pHat < 0 || pHat > 1) {
+                resultsDiv.innerHTML = '<p class="text-red-500">Error: Calculated sample proportion p̂ is out of range [0,1]. Check x and n inputs.</p>';
+                return;
+            }
+
+            // Sample size checks for normal approximation
+            const nPHat = n * pHat;
+            const nOneMinusPHat = n * (1 - pHat);
+            let successWarning = '';
+            if (nPHat < 10 || nOneMinusPHat < 10) {
+                successWarning = `<p class="text-yellow-600">Warning: n·p̂ = ${nPHat.toFixed(2)} and n·(1−p̂) = ${nOneMinusPHat.toFixed(2)} — the Normal approximation may be poor.</p>`;
+            }
+
+            try {
+                // Critical value Z*
+                const alpha = 1 - cLevel;
+                const areaToLeft = 1 - (alpha / 2);
+                const zCritical = Math.abs(normalInvCDF(areaToLeft));
+
+                // Standard error and margin of error
+                const standardError = Math.sqrt((pHat * (1 - pHat)) / n);
+                const marginOfError = zCritical * standardError;
+
+                const lowerBound = pHat - marginOfError;
+                const upperBound = pHat + marginOfError;
+                const finalLower = Math.max(0, lowerBound);
+                const finalUpper = Math.min(1, upperBound);
+
+                // Display detailed intermediate values so user (and developer) can see what's going on
+                resultsDiv.innerHTML = successWarning + `
+                    <h3 class="text-xl font-bold mt-4">Proportion Interval Results</h3>
+                    <p><strong>Confidence Level (C):</strong> ${(cLevel*100).toFixed(2)}%</p>
+                    <p><strong>Sample Proportion (p̂):</strong> ${pHat.toFixed(6)}</p>
+                    <p><strong>Number of successes (x):</strong> ${x}</p>
+                    <p><strong>Sample size (n):</strong> ${n}</p>
+                    <p><strong>n·p̂:</strong> ${nPHat.toFixed(4)}</p>
+                    <p><strong>n·(1−p̂):</strong> ${nOneMinusPHat.toFixed(4)}</p>
+                    <p><strong>Critical Z*:</strong> ${zCritical.toFixed(6)}</p>
+                    <p><strong>Standard Error (SE):</strong> ${standardError.toFixed(6)}</p>
+                    <p><strong>Margin of Error (ME):</strong> ${marginOfError.toFixed(6)}</p>
+                    <hr class="my-2 border-gray-300">
+                    <p class="text-lg font-bold"><strong>Confidence Interval (p):</strong> (${finalLower.toFixed(4)}, ${finalUpper.toFixed(4)})</p>
+                `;
+            } catch (err) {
+                resultsDiv.innerHTML = `<p class="text-red-500">Calculation Error: ${err.message}</p>`;
+            }
+        }
+        
+        // --- Hypothesis Test Logic (Modified for Two Sample T-Test) ---
+
+        /**
+         * Toggles between the Hypothesis Test selection menu and the specific calculators.
+         */
+        function showHTType(type) {
+            const selectDiv = document.getElementById('ht-select');
+            const meanT1Div = document.getElementById('ht-mean-t-calc');
+            const meanT2Div = document.getElementById('ht-mean-t2-calc'); // New div
+            const propZDiv = document.getElementById('ht-prop-z-calc');
+
+            selectDiv.classList.add('hidden');
+            meanT1Div.classList.add('hidden');
+            meanT2Div.classList.add('hidden'); // Hide new div
+            propZDiv.classList.add('hidden');
+            document.getElementById('ht-results').innerHTML = '<p>Enter parameters above and click Calculate.</p>';
+
+            if (type === 'mean-t') {
+                meanT1Div.classList.remove('hidden');
+                // WCAG FIX: Removed hardcoded selection and relies on `checked` attribute to call it
+                const checkedRadio = document.querySelector('input[name="ht-data-method"]:checked');
+                if (checkedRadio) {
+                    updateTTestInputFields(); 
+                }
+            } else if (type === 'mean-t2') { // Show Two Sample T-Test
+                meanT2Div.classList.remove('hidden');
+                // WCAG FIX: Removed hardcoded selection and relies on `checked` attribute to call it
+                const checkedRadio = document.querySelector('input[name="ht-data-method-2"]:checked');
+                if (checkedRadio) {
+                    updateT2TestInputFields(); 
+                }
+            } else if (type === 'prop-z') {
+                propZDiv.classList.remove('hidden');
+                // WCAG FIX: Removed hardcoded selection and relies on `checked` attribute to call it
+                const checkedRadio = document.querySelector('input[name="ht-prop-method"]:checked');
+                if (checkedRadio) {
+                    updatePropTestInputFields(); 
+                }
+            } else {
+                selectDiv.classList.remove('hidden');
+            }
+        }
+
+        /**
+         * Toggles the input fields between Summary Data and Raw Data (One Sample Mean Test)
+         */
+        function updateTTestInputFields() {
+            // WCAG FIX: Get method from checked radio button
+            const checkedRadio = document.querySelector('input[name="ht-data-method"]:checked');
+            const method = checkedRadio ? checkedRadio.value : 'summary'; // Default to summary if none checked
+            
+            document.getElementById('ht-input-summary').classList.toggle('hidden', method !== 'summary');
+            document.getElementById('ht-input-raw').classList.toggle('hidden', method !== 'raw');
+            document.getElementById('ht-results').innerHTML = '<p>Enter parameters above and click Calculate.</p>';
+        }
+
+        /**
+         * Toggles the input fields between Summary Data and Raw Data (Two Sample Mean Test)
+         */
+        function updateT2TestInputFields() {
+            // WCAG FIX: Get method from checked radio button
+            const checkedRadio = document.querySelector('input[name="ht-data-method-2"]:checked');
+            const method = checkedRadio ? checkedRadio.value : 'summary'; // Default to summary if none checked
+            
+            document.getElementById('ht-input-2-summary').classList.toggle('hidden', method !== 'summary');
+            document.getElementById('ht-input-2-raw').classList.toggle('hidden', method !== 'raw');
+            document.getElementById('ht-results').innerHTML = '<p>Enter parameters above and click Calculate.</p>';
+        }
+
+        /**
+         * Extracts and calculates the mean, sample standard deviation, and sample size for both samples.
+         * @param {string} type The input method: 'summary' or 'raw'.
+         * @returns {{xBar1: number, s1: number, n1: number, xBar2: number, s2: number, n2: number, rawDataUsed: boolean} | null} The calculated data or null on error.
+         */
+        function get2SampleMeanAndSD(type) {
+            let xBar1, s1, n1, xBar2, s2, n2;
+            let rawDataUsed = false;
+
+            if (type === 'summary') {
+                xBar1 = parseFloat(document.getElementById('ht-mean-t2-xbar1').value);
+                s1 = parseFloat(document.getElementById('ht-mean-t2-s1').value);
+                n1 = parseInt(document.getElementById('ht-mean-t2-n1').value);
+                xBar2 = parseFloat(document.getElementById('ht-mean-t2-xbar2').value);
+                s2 = parseFloat(document.getElementById('ht-mean-t2-s2').value);
+                n2 = parseInt(document.getElementById('ht-mean-t2-n2').value);
+
+                // Validation for summary data
+                if (isNaN(xBar1) || isNaN(s1) || s1 < 0 || isNaN(n1) || n1 <= 1 || !Number.isInteger(n1) ||
+                    isNaN(xBar2) || isNaN(s2) || s2 < 0 || isNaN(n2) || n2 <= 1 || !Number.isInteger(n2)) {
+                    return null;
+                }
+            } else { // raw data from L1 and L2 on Stats Lists tab
+                const l1Inputs = document.querySelectorAll('.stats-input-l1');
+                const l2Inputs = document.querySelectorAll('.stats-input-l2');
+
+                const numbers1 = Array.from(l1Inputs).map(input => parseFloat(input.value)).filter(val => !isNaN(val));
+                const numbers2 = Array.from(l2Inputs).map(input => parseFloat(input.value)).filter(val => !isNaN(val));
+
+                n1 = numbers1.length;
+                n2 = numbers2.length;
+
+                if (n1 < 2 || n2 < 2) {
+                    document.getElementById('ht-results').innerHTML = '<p class="text-red-500">Error: Raw data input requires at least 2 valid numbers in both L1 (Sample 1) and L2 (Sample 2).</p>';
+                    return null;
+                }
+                
+                xBar1 = getMean(numbers1);
+                s1 = getSampleStandardDeviation(numbers1);
+                xBar2 = getMean(numbers2);
+                s2 = getSampleStandardDeviation(numbers2);
+                rawDataUsed = true;
+            }
+
+            return { xBar1, s1, n1, xBar2, s2, n2, rawDataUsed };
+        }
+
+        /**
+         * Calculates the Two Sample T-Test for a difference in Means ($\mu_1 - \mu_2$).
+         * Uses the unpooled method and Welch-Satterthwaite approximation for df.
+         */
+        function calculate2SampleTTest() {
+            const resultsDiv = document.getElementById('ht-results');
+            // WCAG FIX: Get method from checked radio button
+            const methodRadio = document.querySelector('input[name="ht-data-method-2"]:checked');
+            const method = methodRadio ? methodRadio.value : 'summary';
+            resultsDiv.innerHTML = '<p>Calculating...</p>';
+
+            const alpha = parseFloat(document.getElementById('ht-mean-t2-alpha').value);
+            const tailType = document.getElementById('ht-mean-t2-tail').value; 
+
+            if (isNaN(alpha) || alpha <= 0 || alpha >= 1) {
+                resultsDiv.innerHTML = '<p class="text-red-500">Error: Significance Level (α) must be between 0 and 1.</p>';
+                return;
+            }
+
+            const data = get2SampleMeanAndSD(method);
+
+            if (data === null) {
+                // Error message already set in get2SampleMeanAndSD or generic message
+                if (!resultsDiv.innerHTML.includes("Error")) {
+                     resultsDiv.innerHTML = '<p class="text-red-500">Error: Please ensure all sample data fields are valid. Sample sizes must be positive integers > 1, and sample standard deviations must be non-negative.</p>';
+                }
+                return;
+            }
+
+            const { xBar1, s1, n1, xBar2, s2, n2, rawDataUsed } = data;
+
+            try {
+                // --- 1. Calculate Test Statistic (T) ---
+                const SE1_sq = (s1 * s1) / n1;
+                const SE2_sq = (s2 * s2) / n2;
+                const SE = Math.sqrt(SE1_sq + SE2_sq);
+                
+                // Test Statistic: T = (x̄₁ - x̄₂) / SE (Since H₀: μ₁ - μ₂ = 0)
+                const tTestStat = (xBar1 - xBar2) / SE;
+                
+                // --- 2. Calculate Degrees of Freedom (df) - Welch-Satterthwaite Approximation ---
+                // Numerator: $(SE_1^2 + SE_2^2)^2$
+                const numerator = Math.pow(SE1_sq + SE2_sq, 2);
+                
+                // Denominator: $\frac{(SE_1^2)^2}{n_1 - 1} + \frac{(SE_2^2)^2}{n_2 - 1}$
+                const denominator = (Math.pow(SE1_sq, 2) / (n1 - 1)) + (Math.pow(SE2_sq, 2) / (n2 - 1));
+                
+                // The calculated df is rounded down to the nearest integer.
+                const degreesOfFreedom = Math.floor(numerator / denominator);
+                
+                // --- 3. Calculate P-value (Based on Tail Type) ---
+                let pValue;
+                
+                if (tailType === 'less-than') {
+                    // Left-Tail: P(T < t_stat)
+                    pValue = tDistributionCDF(tTestStat, degreesOfFreedom);
+                } else if (tailType === 'greater-than') {
+                    // Right-Tail: P(T > t_stat) = 1 - P(T <= t_stat)
+                    pValue = 1 - tDistributionCDF(tTestStat, degreesOfFreedom);
+                } else { // not-equal (Two-Tail)
+                    // Two-Tail: 2 * P(T > |t_stat|)
+                    const absT = Math.abs(tTestStat);
+                    pValue = 2 * (1 - tDistributionCDF(absT, degreesOfFreedom));
+                }
+
+                // Ensure pValue is clamped between 0 and 1
+                pValue = Math.min(1, Math.max(0, pValue));
+
+                // --- 4. Make Decision (P-Value Method) ---
+                let decision;
+                if (pValue <= alpha) {
+                    decision = 'Reject the Null Hypothesis (H₀).';
+                } else {
+                    decision = 'Fail to Reject the Null Hypothesis (H₀).';
+                }
+                
+                // --- 5. Format and Display Results ---
+                const pValueFormatted = formatProb(pValue);
+                const hypothesisSymbol = tailType === 'less-than' ? '<' : tailType === 'greater-than' ? '>' : '≠';
+                
+                let statsDetail = '';
+                if (rawDataUsed) {
+                    statsDetail = `
+                        <h4 class="text-lg font-bold text-gray-800 mt-3">Calculated Sample Statistics (from L1 & L2)</h4>
+                        <p><strong>Sample 1 (x̄₁, s₁, n₁):</strong> ${xBar1.toFixed(4)}, ${s1.toFixed(4)}, ${n1}</p>
+                        <p><strong>Sample 2 (x̄₂, s₂, n₂):</strong> ${xBar2.toFixed(4)}, ${s2.toFixed(4)}, ${n2}</p>
+                    `;
+                } else {
+                     statsDetail = `<p><strong>Sample 1 (x̄₁, s₁, n₁):</strong> ${xBar1.toFixed(4)}, ${s1.toFixed(4)}, ${n1}</p>
+                         <p><strong>Sample 2 (x̄₂, s₂, n₂):</strong> ${xBar2.toFixed(4)}, ${s2.toFixed(4)}, ${n2}</p>`;
+                }
+
+                resultsDiv.innerHTML = `
+                    <h3 class="text-xl font-bold">Two Sample T-Test Results</h3>
+                    <p class="font-semibold text-gray-700">Degrees of Freedom (df): ${degreesOfFreedom} (Welch-Satterthwaite)</p>
+                    ${statsDetail}
+                    <p><strong>Hypotheses:</strong> H₀: μ₁ = μ₂ vs. H₁: μ₁ ${hypothesisSymbol} μ₂</p>
+                    <p><strong>Significance Level (α):</strong> ${alpha.toFixed(3)}</p>
+                    <hr class="my-2 border-gray-300">
+                    <p><strong>Test Statistic (T):</strong> ${tTestStat.toFixed(4)}</p>
+                    <p class="text-lg font-bold text-green-700"><strong>P-Value:</strong> ${pValueFormatted}</p>
+                    <hr class="my-2 border-gray-300">
+                    <p class="text-lg font-bold"><strong>Decision:</strong> ${decision}</p>
+                `;
+
+            } catch (e) {
+                resultsDiv.innerHTML = `<p class="text-red-500">Calculation Error: ${e.message}</p>`;
+            }
+        }
+        
+        /**
+         * Calculates the One Sample T-Test for a Mean (T-Test for μ) using the accurate T-CDF.
+         */
+        function calculateTTestMean() {
+            const resultsDiv = document.getElementById('ht-results');
+            // WCAG FIX: Get method from checked radio button
+            const methodRadio = document.querySelector('input[name="ht-data-method"]:checked');
+            const method = methodRadio ? methodRadio.value : 'summary';
+            resultsDiv.innerHTML = '<p>Calculating...</p>';
+
+            const mu0 = parseFloat(document.getElementById('ht-mean-t-mu0').value);
+            const alpha = parseFloat(document.getElementById('ht-mean-t-alpha').value);
+            const tailType = document.getElementById('ht-mean-t-tail').value;
+
+            let xBar, s, n;
+            let rawDataUsed = false;
+            
+            // --- 1. Gather Data (Summary or Raw) ---
+            if (method === 'summary') {
+                xBar = parseFloat(document.getElementById('ht-mean-t-xbar').value);
+                s = parseFloat(document.getElementById('ht-mean-t-s').value); 
+                n = parseInt(document.getElementById('ht-mean-t-n').value);
+            } else { // raw data
+                // CORRECTED: Read raw data from the textarea input directly
+                const rawDataString = document.getElementById('ht-raw-data').value;
+                const numbers = rawDataString.split(/[\s,]+/).filter(val => val.length > 0).map(Number);
+                
+                n = numbers.length;
+                if (n < 2) {
+                    resultsDiv.innerHTML = '<p class="text-red-500">Error: Raw data input requires at least 2 valid numbers to calculate statistics.</p>';
+                    return;
+                }
+                
+                if (numbers.some(isNaN)) {
+                    resultsDiv.innerHTML = '<p class="text-red-500">Error: Please ensure all raw data values are valid numbers.</p>';
+                    return;
+                }
+
+                xBar = getMean(numbers);
+                s = getSampleStandardDeviation(numbers);
+                rawDataUsed = true;
+            }
+            
+            // --- 2. Input Validation (General) ---
+            if (isNaN(mu0) || isNaN(xBar) || isNaN(s) || s < 0 || isNaN(n) || n <= 1 || !Number.isInteger(n) || isNaN(alpha) || alpha <= 0 || alpha >= 1) {
+                resultsDiv.innerHTML = '<p class="text-red-500">Error: Please ensure all fields are valid. Sample Std Dev (s) must be non-negative, Sample Size (n) must be a positive integer > 1, and Significance Level (α) must be between 0 and 1.</p>';
+                return;
+            }
+
+            try {
+                // --- 3. Calculate Test Statistic (T) ---
+                const degreesOfFreedom = n - 1;
+                const standardError = s / Math.sqrt(n);
+                const tTestStat = (xBar - mu0) / standardError;
+                
+                // --- 4. Calculate P-value (using T-CDF) ---
+                let pValue;
+                
+                if (tailType === 'less-than') {
+                    // Left-Tail: P(T < t_stat)
+                    pValue = tDistributionCDF(tTestStat, degreesOfFreedom);
+                } else if (tailType === 'greater-than') {
+                    // Right-Tail: P(T > t_stat) = 1 - P(T <= t_stat)
+                    pValue = 1 - tDistributionCDF(tTestStat, degreesOfFreedom);
+                } else { // not-equal (Two-Tail)
+                    // Two-Tail: 2 * P(T > |t_stat|)
+                    const absT = Math.abs(tTestStat);
+                    pValue = 2 * (1 - tDistributionCDF(absT, degreesOfFreedom));
+                }
+                
+                // Ensure pValue is clamped between 0 and 1 due to potential floating point errors
+                pValue = Math.min(1, Math.max(0, pValue));
+
+
+                // --- 5. Make Decision (P-Value Method) ---
+                let decision;
+                if (pValue <= alpha) {
+                    decision = 'Reject the Null Hypothesis (H₀).';
+                } else {
+                    decision = 'Fail to Reject the Null Hypothesis (H₀).';
+                }
+                
+                // --- 6. Format and Display Results ---
+                const pValueFormatted = formatProb(pValue);
+                const hypothesisText = tailType === 'less-than' ? '<' : tailType === 'greater-than' ? '>' : '≠';
+                
+                let statsDetail = '';
+                if (rawDataUsed) {
+                    statsDetail = `
+                        <p><strong>Calculated Sample Mean (x̄):</strong> ${xBar.toFixed(4)}</p>
+                        <p><strong>Calculated Sample Std Dev (s):</strong> ${s.toFixed(4)}</p>
+                    `;
+                }
+
+                resultsDiv.innerHTML = `
+                    <h3 class="text-xl font-bold">One Sample T-Test Results</h3>
+                    <p class="font-semibold text-gray-700">Degrees of Freedom (df): ${degreesOfFreedom}</p>
+                    ${!rawDataUsed ? `<p><strong>Sample Mean (x̄):</strong> ${xBar.toFixed(4)}</p>` : ''}
+                    ${!rawDataUsed ? `<p><strong>Sample Std Dev (s):</strong> ${s.toFixed(4)}</p>` : ''}
+                    ${statsDetail}
+                    <p><strong>Sample Size (n):</strong> ${n}</p>
+                    <p><strong>Hypotheses:</strong> H₀: μ = ${mu0} vs. H₁: μ ${hypothesisText} ${mu0}</p>
+                    <p><strong>Significance Level (α):</strong> ${alpha.toFixed(3)}</p>
+                    <hr class="my-2 border-gray-300">
+                    <p><strong>Test Statistic (T):</strong> ${tTestStat.toFixed(4)}</p>
+                    <p class="text-lg font-bold text-green-700"><strong>P-Value:</strong> ${pValueFormatted}</p>
+                    <hr class="my-2 border-gray-300">
+                    <p class="text-lg font-bold"><strong>Conclusion:</strong> ${decision}</p>
+                `;
+
+            } catch (e) {
+                resultsDiv.innerHTML = `<p class="text-red-500">Calculation Error: ${e.message}</p>`;
+            }
+        }
+        
+        /**
+         * Toggles the input fields for the Proportion Z-Test
+         */
+        function updatePropTestInputFields() {
+            // WCAG FIX: Get method from checked radio button
+            const checkedRadio = document.querySelector('input[name="ht-prop-method"]:checked');
+            const method = checkedRadio ? checkedRadio.value : 'x_n'; // Default to x_n if none checked
+            
+            document.getElementById('ht-prop-input-x-n').classList.toggle('hidden', method !== 'x_n');
+            document.getElementById('ht-prop-input-phat-n').classList.toggle('hidden', method !== 'phat_n');
+            document.getElementById('ht-results').innerHTML = '<p>Enter parameters above and click Calculate.</p>';
+        }
+
+        /**
+         * Calculates the Single Sample Proportion Z-Test (1-PropZTest).
+         */
+        function calculatePropZTest() {
+            const resultsDiv = document.getElementById('ht-results');
+            // WCAG FIX: Get method from checked radio button
+            const methodRadio = document.querySelector('input[name="ht-prop-method"]:checked');
+            const method = methodRadio ? methodRadio.value : 'x_n';
+            resultsDiv.innerHTML = '<p>Calculating...</p>';
+
+            const p0 = parseFloat(document.getElementById('ht-prop-p0').value);
+            const alpha = parseFloat(document.getElementById('ht-prop-alpha').value);
+            const tailType = document.getElementById('ht-prop-tail').value;
+
+            let n, x, pHat;
+
+            // --- 1. Gather Data ---
+            if (method === 'x_n') {
+                x = parseInt(document.getElementById('ht-prop-x').value);
+                n = parseInt(document.getElementById('ht-prop-n-x').value);
+                pHat = x / n;
+            } else { // phat_n
+                pHat = parseFloat(document.getElementById('ht-prop-phat').value);
+                n = parseInt(document.getElementById('ht-prop-n-phat').value);
+                x = Math.round(pHat * n);
+            }
+            
+            // --- 2. Input Validation ---
+            if (isNaN(p0) || p0 < 0 || p0 > 1 || isNaN(alpha) || alpha <= 0 || alpha >= 1 ||
+                isNaN(n) || n <= 0 || !Number.isInteger(n) || isNaN(x) || x < 0 || x > n || !Number.isInteger(x)) {
+                resultsDiv.innerHTML = '<p class="text-red-500">Error: Please ensure all inputs are valid. p₀ and p̂ (if used) must be between 0 and 1. x and n must be positive integers, with x ≤ n.</p>';
+                return;
+            }
+
+            // --- 3. Check Conditions (Success/Failure Rule) ---
+            const n_p0 = n * p0;
+            const n_1_p0 = n * (1 - p0);
+            let warning = '';
+            if (n_p0 < 10 || n_1_p0 < 10) {
+                 warning = `<p class="text-yellow-600">Warning: The conditions n · p₀ ≥ 10 and n · (1-p₀) ≥ 10 are not met (Got ${n_p0.toFixed(1)} and ${n_1_p0.toFixed(1)}). The Normal Approximation may not be accurate.</p>`;
+            }
+
+            try {
+                // --- 4. Calculate Test Statistic (Z) ---
+                const standardError = Math.sqrt((p0 * (1 - p0)) / n);
+                const zTestStat = (pHat - p0) / standardError;
+                
+                // --- 5. Calculate P-value (using Z-CDF) ---
+                let pValue;
+                
+                if (tailType === 'less-than') {
+                    // Left-Tail: P(Z < z_stat)
+                    pValue = normalCDF(zTestStat);
+                } else if (tailType === 'greater-than') {
+                    // Right-Tail: P(Z > z_stat) = 1 - P(Z <= z_stat)
+                    pValue = 1 - normalCDF(zTestStat);
+                } else { // not-equal (Two-Tail)
+                    // Two-Tail: 2 * P(Z > |z_stat|)
+                    const absZ = Math.abs(zTestStat);
+                    pValue = 2 * (1 - normalCDF(absZ));
+                }
+                
+                pValue = Math.min(1, Math.max(0, pValue));
+
+                // --- 6. Make Decision (P-Value Method) ---
+                let decision;
+                if (pValue <= alpha) {
+                    decision = 'Reject the Null Hypothesis (H₀).';
+                } else {
+                    decision = 'Fail to Reject the Null Hypothesis (H₀).';
+                }
+                
+                // --- 7. Format and Display Results ---
+                const pValueFormatted = formatProb(pValue);
+                const hypothesisText = tailType === 'less-than' ? '<' : tailType === 'greater-than' ? '>' : '≠';
+                
+                resultsDiv.innerHTML = warning + `
+                    <h3 class="text-xl font-bold mt-4">Proportion Z-Test Results</h3>
+                    <p><strong>Sample Proportion (p̂):</strong> ${pHat.toFixed(4)}</p>
+                    <p><strong>Sample Size (n):</strong> ${n}</p>
+                    <p><strong>Hypotheses:</strong> H₀: p = ${p0} vs. H₁: p ${hypothesisText} ${p0}</p>
+                    <p><strong>Significance Level (α):</strong> ${alpha.toFixed(3)}</p>
+                    <hr class="my-2 border-gray-300">
+                    <p><strong>Test Statistic (Z):</strong> ${zTestStat.toFixed(4)}</p>
+                    <p class="text-lg font-bold text-green-700"><strong>P-Value:</strong> ${pValueFormatted}</p>
+                    <hr class="my-2 border-gray-300">
+                    <p class="text-lg font-bold"><strong>Conclusion:</strong> ${decision}</p>
+                `;
+
+            } catch (e) {
+                resultsDiv.innerHTML = `<p class="text-red-500">Calculation Error: ${e.message}</p>`;
+            }
+        }
+
+        // Bind keyboard events to the standard calculator for improved accessibility
+        document.addEventListener('keydown', (event) => {
+            // Check if user is inside a numeric input field on any tab
+            const isTypingInInput = event.target.closest('input[type="number"]') || event.target.closest('textarea');
+
+            // --- Stats Lists Tab Navigation (CORRECTED) ---
+            if (event.target.closest('#panel-stats-lists') && isTypingInInput) {
+                const currentInput = event.target;
+                const currentRow = parseInt(currentInput.dataset.row);
+                const isL1 = currentInput.classList.contains('stats-input-l1');
+                
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    let nextInput;
+                    
+                    if (isL1) {
+                        // L1 + Enter -> L2 (TOP row, 0)
+                        nextInput = document.querySelector(`.stats-input-l2[data-row="0"]`);
+                    } else {
+                        // L2 + Enter -> L1 (TOP row, 0)
+                        nextInput = document.querySelector(`.stats-input-l1[data-row="0"]`);
+                    }
+                    
+                    if (nextInput) {
+                        nextInput.focus();
+                        nextInput.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }
+                } else if (event.key === 'ArrowRight') {
+                    event.preventDefault();
+                    let nextInput;
+                    
+                    if (isL1) {
+                        // L1 + ArrowRight -> L2 (same row)
+                        nextInput = document.querySelector(`.stats-input-l2[data-row="${currentRow}"]`);
+                    } else {
+                        // L2 + ArrowRight -> L1 (same row) - standard cross-list navigation
+                        nextInput = document.querySelector(`.stats-input-l1[data-row="${currentRow}"]`);
+                    }
+                    
+                    if (nextInput) {
+                        nextInput.focus();
+                    }
+                } else if (event.key === 'ArrowDown') {
+                    // Vertical movement down
+                    event.preventDefault();
+                    const nextRow = currentRow + 1;
+                    const nextInputSelector = isL1 ? `.stats-input-l1[data-row="${nextRow}"]` : `.stats-input-l2[data-row="${nextRow}"]`;
+                    const nextInput = document.querySelector(nextInputSelector);
+                    if (nextInput) {
+                        nextInput.focus();
+                    }
+                }
+                return;
+            }
+            
+            // --- Standard Calculator Keyboard Support ---
+            if (event.target.closest('#panel-calculator') && !isTypingInInput) {
+                const key = event.key;
+                if (/\d/.test(key) || ['+', '-', '*', '/', '.', '^', '(', ')'].includes(key)) {
+                    // Check for shift to interpret multiplication and exponent
+                    if (key === '*' && event.shiftKey) { // Shift+8 is *
+                         appendToDisplay('*');
+                    } else if (key === '^' && event.shiftKey) { // Shift+6 is ^ (sometimes)
+                         appendToDisplay('^');
+                    } else if (key === '+' && event.shiftKey) { // Shift+= is +
+                         appendToDisplay('+');
+                    } else if (key === '(' || key === ')') {
+                         appendToDisplay(key);
+                    } else if (/\d/.test(key) || ['+', '-', '/', '.', '*'].includes(key)) {
+                        // Standard numbers and operations (excluding shift-based ones already handled)
+                        appendToDisplay(key);
+                    }
+                } else if (key === 'Enter') {
+                    // Pressing Enter acts as hitting =
+                    calculateResult();
+                    event.preventDefault(); // Prevent accidental form submission
+                } else if (key === '=') {
+                    // Pressing = also acts as hitting =
+                    calculateResult();
+                    event.preventDefault(); 
+                } else if (key === 'Backspace') {
+                    deleteLast();
+                    event.preventDefault(); // Prevent going back a page
+                }
+            }
+        });
+    </script>
+</body>
+</html>
