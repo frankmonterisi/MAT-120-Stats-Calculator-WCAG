@@ -249,20 +249,20 @@ button:focus{ outline: 3px solid #005fcc; }
                                     <div class="flex flex-col space-y-2">
                                         <h4 class="block text-gray-700 font-medium">L1 (Data/Values)</h4>
                                         <script>
-                                            // FIX: Retaining explicit ID and title for each input. Labeling happens via 'for' attribute and visually hidden text.
+                                            // FIX: Retaining explicit ID and title for each input. Changed to type="text" to allow fractions
                                             const MAX_DATA_ROWS = 40; 
                                             for (let i = 0; i < MAX_DATA_ROWS; i++) {
-                                                document.write(`<label for="l1-data-${i}" class="sr-only-wcag">L1 data row ${i+1}</label><input type="number" id="l1-data-${i}" class="p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 stats-input-l1" data-row="${i}" title="L1 data entry row ${i+1}">`);
+                                                document.write(`<label for="l1-data-${i}" class="sr-only-wcag">L1 data row ${i+1}</label><input type="text" id="l1-data-${i}" class="p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 stats-input-l1" data-row="${i}" title="L1 data entry row ${i+1}">`);
                                             }
                                         </script>
                                     </div>
                                     <div class="flex flex-col space-y-2">
                                         <h4 class="block text-gray-700 font-medium">L2 (Data/Frequency)</h4>
                                         <script>
-                                            // FIX: Retaining explicit ID and title for each input. Labeling happens via 'for' attribute and visually hidden text.
+                                            // FIX: Retaining explicit ID and title for each input. Changed to type="text" to allow fractions
                                             const MAX_DATA_ROWS_L2 = 40; 
                                             for (let i = 0; i < MAX_DATA_ROWS_L2; i++) {
-                                                document.write(`<label for="l2-data-${i}" class="sr-only-wcag">L2 data row ${i+1}</label><input type="number" id="l2-data-${i}" class="p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 stats-input-l2" data-row="${i}" title="L2 data entry row ${i+1}">`);
+                                                document.write(`<label for="l2-data-${i}" class="sr-only-wcag">L2 data row ${i+1}</label><input type="text" id="l2-data-${i}" class="p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 stats-input-l2" data-row="${i}" title="L2 data entry row ${i+1}">`);
                                             }
                                         </script>
                                     </div>
@@ -442,7 +442,7 @@ button:focus{ outline: 3px solid #005fcc; }
                                     </select>
                                 </div>
                                 <div id="percentile-single-value-input">
-                                    <label for="percentile-prob-input" class="block text-gray-700 font-medium mb-1">Area/Probability (e.g., 0.95)</label>
+                                    <label for="percentile-prob-input" class="block text-gray-700 font-medium mb-1">Area/Probability</label>
                                     <input type="number" id="percentile-prob-input" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                                 </div>
                             </div>
@@ -575,7 +575,7 @@ button:focus{ outline: 3px solid #005fcc; }
                                 </div>
                                 <div class="w-full">
                                     <label for="ci-mean-c-level" class="block text-gray-700 font-medium mb-1">Confidence Level (C)</label>
-                                    <input type="number" step="0.01" id="ci-mean-c-level" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., 0.95">
+                                    <input type="number" step="0.01" id="ci-mean-c-level" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                                 </div>
                             </div>
                         </div>
@@ -584,7 +584,7 @@ button:focus{ outline: 3px solid #005fcc; }
                             <p class="text-gray-700 font-medium">Data is taken from **L1** on the **Stats Lists** tab. Ensure your data is entered there before calculating.</p>
                             <div class="w-full">
                                 <label for="ci-mean-c-level-raw" class="block text-gray-700 font-medium mb-1">Confidence Level (C)</label>
-                                <input type="number" step="0.01" id="ci-mean-c-level-raw" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., 0.95">
+                                <input type="number" step="0.01" id="ci-mean-c-level-raw" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                             </div>
                         </div>
 
@@ -626,7 +626,7 @@ button:focus{ outline: 3px solid #005fcc; }
                             <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
                                 <div class="w-full">
                                     <label for="ci-prop-phat" class="block text-gray-700 font-medium mb-1">Sample Proportion (p̂)</label>
-                                    <input type="number" step="0.001" id="ci-prop-phat" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00 to 1.00">
+                                    <input type="number" step="0.001" id="ci-prop-phat" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                                 </div>
                                 <div class="w-full">
                                     <label for="ci-prop-n-phat" class="block text-gray-700 font-medium mb-1">Sample Size (n)</label>
@@ -636,7 +636,7 @@ button:focus{ outline: 3px solid #005fcc; }
                         </div>
                         <div class="mt-4">
                             <label for="ci-prop-c-level" class="block text-gray-700 font-medium mb-1">Confidence Level (C)</label>
-                            <input type="number" step="0.01" id="ci-prop-c-level" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., 0.95">
+                            <input type="number" step="0.01" id="ci-prop-c-level" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                         </div>
                         <button onclick="calculateProportionCI()" class="button-style bg-green-600 text-white font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 w-full mt-4 button-keyboard-fix">
                             Calculate Proportion Interval
@@ -699,7 +699,7 @@ button:focus{ outline: 3px solid #005fcc; }
                                 </div>
                                 <div class="w-full">
                                     <label for="ht-mean-t-alpha" class="block text-gray-700 font-medium mb-1">Significance Level (α)</label>
-                                    <input type="number" step="0.01" id="ht-mean-t-alpha" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., 0.05">
+                                    <input type="number" step="0.01" id="ht-mean-t-alpha" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                                 </div>
                                 <div class="w-full">
                                     <label for="ht-mean-t-tail" class="block text-gray-700 font-medium mb-1">Alternative Hypothesis (H₁)</label>
@@ -729,8 +729,8 @@ button:focus{ outline: 3px solid #005fcc; }
                             </div>
 
                             <div id="ht-input-raw" class="space-y-2 hidden">
-                                <label for="ht-raw-data" class="block text-gray-700 font-medium mb-1">Raw Data (separate values by comma, space, or new line)</label>
-                                <textarea id="ht-raw-data" rows="4" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., 10.1, 12.5, 11.8, 10.9, 12.2"></textarea>
+                                <label for="ht-raw-data" class="block text-gray-700 font-medium mb-1">Raw Data (separate values by comma, space, or new line. Fractions supported)</label>
+                                <textarea id="ht-raw-data" rows="4" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
                             </div>
                         </div>
 
@@ -755,7 +755,7 @@ button:focus{ outline: 3px solid #005fcc; }
                             <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
                                 <div class="w-full">
                                     <label for="ht-mean-t2-alpha" class="block text-gray-700 font-medium mb-1">Significance Level (α)</label>
-                                    <input type="number" step="0.01" id="ht-mean-t2-alpha" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., 0.05" value="0.05">
+                                    <input type="number" step="0.01" id="ht-mean-t2-alpha" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" value="0.05">
                                 </div>
                                 <div class="w-full">
                                     <label for="ht-mean-t2-tail" class="block text-gray-700 font-medium mb-1">Alternative Hypothesis (H₁)</label>
@@ -852,11 +852,11 @@ button:focus{ outline: 3px solid #005fcc; }
                             <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
                                 <div class="w-full">
                                     <label for="ht-prop-p0" class="block text-gray-700 font-medium mb-1">Hypothesized Proportion (p₀)</label>
-                                    <input type="number" id="ht-prop-p0" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., 0.5">
+                                    <input type="number" id="ht-prop-p0" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                                 </div>
                                 <div class="w-full">
                                     <label for="ht-prop-alpha" class="block text-gray-700 font-medium mb-1">Significance Level (α)</label>
-                                    <input type="number" step="0.01" id="ht-prop-alpha" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., 0.05">
+                                    <input type="number" step="0.01" id="ht-prop-alpha" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                                 </div>
                                 <div class="w-full">
                                     <label for="ht-prop-tail" class="block text-gray-700 font-medium mb-1">Alternative Hypothesis (H₁)</label>
@@ -885,7 +885,7 @@ button:focus{ outline: 3px solid #005fcc; }
                                 <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
                                     <div class="w-full">
                                         <label for="ht-prop-phat" class="block text-gray-700 font-medium mb-1">Sample Proportion (p̂)</label>
-                                        <input type="number" step="0.001" id="ht-prop-phat" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00 to 1.00">
+                                        <input type="number" step="0.001" id="ht-prop-phat" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                                     </div>
                                     <div class="w-full">
                                         <label for="ht-prop-n-phat" class="block text-gray-700 font-medium mb-1">Sample Size (n)</label>
@@ -1006,6 +1006,31 @@ button:focus{ outline: 3px solid #005fcc; }
         });
 
         // --- GLOBAL HELPER FUNCTIONS ---
+
+        /**
+         * Safely parses an input string that might contain a fraction into a numeric value.
+         * @param {string|number} value The input value.
+         * @returns {number} The parsed number or NaN.
+         */
+        function parseFraction(value) {
+            if (typeof value !== 'string') value = String(value);
+            value = value.trim();
+            if (value === '') return NaN;
+
+            // Check if the value is a fraction
+            if (value.includes('/')) {
+                const parts = value.split('/');
+                if (parts.length === 2) {
+                    const num = parseFloat(parts[0]);
+                    const den = parseFloat(parts[1]);
+                    if (!isNaN(num) && !isNaN(den) && den !== 0) {
+                        return num / den;
+                    }
+                }
+                return NaN; // Invalid fraction
+            }
+            return parseFloat(value);
+        }
 
         /**
          * Formats a probability value for clear display, using scientific notation for very small numbers.
@@ -1422,20 +1447,23 @@ button:focus{ outline: 3px solid #005fcc; }
 
         /**
          * Sorts the input fields of a specified list in ascending order.
+         * Supports both standard numbers and fractions.
          * @param {string} listName The name of the list to sort ('l1' or 'l2').
          */
         function sortList(listName) {
-            // FIX: Access elements using querySelectorAll directly
             const inputs = document.querySelectorAll(`.stats-input-${listName}`);
-            const values = Array.from(inputs)
-                .map(input => parseFloat(input.value))
-                .filter(value => !isNaN(value));
+            
+            // Map inputs to an object retaining both the original string and the parsed numeric value
+            const data = Array.from(inputs)
+                .map(input => ({ original: input.value, parsed: parseFraction(input.value) }))
+                .filter(item => !isNaN(item.parsed));
 
-            values.sort((a, b) => a - b);
+            // Sort ascending by the parsed value
+            data.sort((a, b) => a.parsed - b.parsed);
 
+            // Reassign the original strings back to the inputs
             inputs.forEach((input, index) => {
-                // Ensure only the valid number of inputs receive sorted data
-                input.value = values[index] !== undefined ? values[index] : '';
+                input.value = data[index] !== undefined ? data[index].original : '';
             });
         }
 
@@ -1449,7 +1477,7 @@ button:focus{ outline: 3px solid #005fcc; }
 
             const numbers = [];
             l1Inputs.forEach(input => {
-                const value = parseFloat(input.value);
+                const value = parseFraction(input.value);
                 if (!isNaN(value)) {
                     numbers.push(value);
                 }
@@ -1509,8 +1537,8 @@ button:focus{ outline: 3px solid #005fcc; }
 
             // Collect valid data and check for errors
             for (let i = 0; i < l1Inputs.length; i++) {
-                const value = parseFloat(l1Inputs[i].value);
-                const freq = parseFloat(l2Inputs[i].value);
+                const value = parseFraction(l1Inputs[i].value);
+                const freq = parseFraction(l2Inputs[i].value);
 
                 if (!isNaN(value) && !isNaN(freq)) {
                     if (freq < 0) {
@@ -1568,8 +1596,8 @@ button:focus{ outline: 3px solid #005fcc; }
             const yData = [];
             
             for (let i = 0; i < l1Inputs.length; i++) {
-                const xVal = parseFloat(l1Inputs[i].value);
-                const yVal = parseFloat(l2Inputs[i].value);
+                const xVal = parseFraction(l1Inputs[i].value);
+                const yVal = parseFraction(l2Inputs[i].value);
 
                 // Only include rows where BOTH L1 and L2 have valid numbers
                 if (!isNaN(xVal) && !isNaN(yVal)) {
@@ -2284,7 +2312,7 @@ button:focus{ outline: 3px solid #005fcc; }
             } else { // raw
                 const l1Inputs = document.querySelectorAll('.stats-input-l1');
                 const numbers = Array.from(l1Inputs)
-                    .map(input => parseFloat(input.value))
+                    .map(input => parseFraction(input.value))
                     .filter(value => !isNaN(value));
 
                 n = numbers.length;
@@ -2395,7 +2423,7 @@ button:focus{ outline: 3px solid #005fcc; }
             }
 
             if (isNaN(cLevel) || cLevel <= 0 || cLevel >= 1) {
-                resultsDiv.innerHTML = '<p class="text-red-500">Error: Confidence Level (C) must be between 0 and 1 (e.g. 0.95 or 95%).</p>';
+                resultsDiv.innerHTML = '<p class="text-red-500">Error: Confidence Level (C) must be between 0 and 1.</p>';
                 return;
             }
 
@@ -2582,8 +2610,8 @@ button:focus{ outline: 3px solid #005fcc; }
                 const l1Inputs = document.querySelectorAll('.stats-input-l1');
                 const l2Inputs = document.querySelectorAll('.stats-input-l2');
 
-                const numbers1 = Array.from(l1Inputs).map(input => parseFloat(input.value)).filter(val => !isNaN(val));
-                const numbers2 = Array.from(l2Inputs).map(input => parseFloat(input.value)).filter(val => !isNaN(val));
+                const numbers1 = Array.from(l1Inputs).map(input => parseFraction(input.value)).filter(val => !isNaN(val));
+                const numbers2 = Array.from(l2Inputs).map(input => parseFraction(input.value)).filter(val => !isNaN(val));
 
                 n1 = numbers1.length;
                 n2 = numbers2.length;
@@ -2604,7 +2632,7 @@ button:focus{ outline: 3px solid #005fcc; }
         }
 
         /**
-         * Calculates the Two Sample T-Test for a difference in Means ($\mu_1 - \mu_2$).
+         * Calculates the Two Sample T-Test for a difference in Means (μ₁ - μ₂).
          * Uses the unpooled method and Welch-Satterthwaite approximation for df.
          */
         function calculate2SampleTTest() {
@@ -2644,10 +2672,10 @@ button:focus{ outline: 3px solid #005fcc; }
                 const tTestStat = (xBar1 - xBar2) / SE;
                 
                 // --- 2. Calculate Degrees of Freedom (df) - Welch-Satterthwaite Approximation ---
-                // Numerator: $(SE_1^2 + SE_2^2)^2$
+                // Numerator: (SE_1^2 + SE_2^2)^2
                 const numerator = Math.pow(SE1_sq + SE2_sq, 2);
                 
-                // Denominator: $\frac{(SE_1^2)^2}{n_1 - 1} + \frac{(SE_2^2)^2}{n_2 - 1}$
+                // Denominator: (SE_1^2)^2 / (n_1 - 1) + (SE_2^2)^2 / (n_2 - 1)
                 const denominator = (Math.pow(SE1_sq, 2) / (n1 - 1)) + (Math.pow(SE2_sq, 2) / (n2 - 1));
                 
                 // The calculated df is rounded down to the nearest integer.
@@ -2738,7 +2766,7 @@ button:focus{ outline: 3px solid #005fcc; }
             } else { // raw data
                 // CORRECTED: Read raw data from the textarea input directly
                 const rawDataString = document.getElementById('ht-raw-data').value;
-                const numbers = rawDataString.split(/[\s,]+/).filter(val => val.length > 0).map(Number);
+                const numbers = rawDataString.split(/[\s,]+/).filter(val => val.length > 0).map(parseFraction);
                 
                 n = numbers.length;
                 if (n < 2) {
@@ -2747,7 +2775,7 @@ button:focus{ outline: 3px solid #005fcc; }
                 }
                 
                 if (numbers.some(isNaN)) {
-                    resultsDiv.innerHTML = '<p class="text-red-500">Error: Please ensure all raw data values are valid numbers.</p>';
+                    resultsDiv.innerHTML = '<p class="text-red-500">Error: Please ensure all raw data values are valid numbers or fractions.</p>';
                     return;
                 }
 
@@ -2937,8 +2965,8 @@ button:focus{ outline: 3px solid #005fcc; }
 
         // Bind keyboard events to the standard calculator for improved accessibility
         document.addEventListener('keydown', (event) => {
-            // Check if user is inside a numeric input field on any tab
-            const isTypingInInput = event.target.closest('input[type="number"]') || event.target.closest('textarea');
+            // Check if user is inside any input field or textarea
+            const isTypingInInput = event.target.tagName.toLowerCase() === 'input' || event.target.tagName.toLowerCase() === 'textarea';
 
             // --- Stats Lists Tab Navigation (CORRECTED) ---
             if (event.target.closest('#panel-stats-lists') && isTypingInInput) {
@@ -2963,6 +2991,7 @@ button:focus{ outline: 3px solid #005fcc; }
                         nextInput.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                     }
                 } else if (event.key === 'ArrowRight') {
+                    // Only jump if cursor is at the end of the text, but to keep it simple, we just jump
                     event.preventDefault();
                     let nextInput;
                     
