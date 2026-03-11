@@ -166,7 +166,7 @@ button:focus{ outline: 3px solid #005fcc; }
                             <button class="bg-gray-100 text-gray-800 hover:bg-gray-200 button-keyboard-fix" onclick="appendToDisplay('4')" aria-label="Four">4</button>
                             <button class="bg-gray-100 text-gray-800 hover:bg-gray-200 button-keyboard-fix" onclick="appendToDisplay('5')" aria-label="Five">5</button>
                             <button class="bg-gray-100 text-gray-800 hover:bg-gray-200 button-keyboard-fix" onclick="appendToDisplay('6')" aria-label="Six">6</button>
-                            <button class="bg-gray-300 text-gray-800 hover:bg-gray-400 button-keyboard-fix" onclick="squareRoot()" aria-label="Square Root">sqrt(x)</button>
+                            <button class="bg-gray-300 text-gray-800 hover:bg-gray-400 button-keyboard-fix" onclick="appendToDisplay('sqrt(')" aria-label="Square Root">sqrt(</button>
                             <button class="bg-blue-600 text-white hover:bg-blue-700 button-keyboard-fix" onclick="appendToDisplay('-')" aria-label="Subtract">-</button>
 
                             <button class="bg-gray-100 text-gray-800 hover:bg-gray-200 button-keyboard-fix" onclick="appendToDisplay('1')" aria-label="One">1</button>
@@ -1102,10 +1102,10 @@ button:focus{ outline: 3px solid #005fcc; }
             // --- IMPLICIT MULTIPLICATION LOGIC ---
             const lastChar = currentInput.slice(-1);
             const isNumberOrDecimal = /\d|\./.test(value);
-            const isOpeningParen = value === '(';
+            const isOpeningParen = value === '(' || value === 'sqrt(';
             
             // 1. Case: number followed by '(' (e.g., 2(3+4))
-            if (isOpeningParen && /\d/.test(lastChar)) {
+            if (isOpeningParen && (/\d/.test(lastChar) || lastChar === ')')) {
                  currentInput += '*';
             }
             
@@ -1143,27 +1143,14 @@ button:focus{ outline: 3px solid #005fcc; }
             if (currentInput === '') return;
             try {
                 // Evaluate the math expression
-                let rawResult = eval(currentInput.replace(/\^/g, '**'));
+                // Replace ^ with ** for exponentiation, and sqrt( with Math.sqrt(
+                let expression = currentInput.replace(/\^/g, '**').replace(/sqrt\(/g, 'Math.sqrt(');
+                let rawResult = eval(expression);
                 
                 // Fix floating-point precision error by capping precision and parsing back
                 // This trims trailing noisy 0s or 9s (e.g. 147.2 - 5.8 -> 141.4)
                 result = parseFloat(rawResult.toPrecision(14)).toString();
                 
-                currentInput = '';
-                updateDisplay();
-            } catch (e) {
-                calcDisplay.innerText = 'Error';
-                currentInput = '';
-                result = '';
-            }
-        }
-
-        function squareRoot() {
-            if (currentInput === '') return;
-            try {
-                let rawResult = Math.sqrt(eval(currentInput));
-                // Fix floating-point precision error by capping precision and parsing back
-                result = parseFloat(rawResult.toPrecision(14)).toString();
                 currentInput = '';
                 updateDisplay();
             } catch (e) {
@@ -3060,7 +3047,7 @@ button:focus{ outline: 3px solid #005fcc; }
             // --- Standard Calculator Keyboard Support ---
             if (event.target.closest('#panel-calculator') && !isTypingInInput) {
                 const key = event.key;
-                if (/\d/.test(key) || ['+', '-', '*', '/', '.', '^', '(', ')'].includes(key)) {
+                if (/\d/.test(key) || ['+', '-', '*', '/', '.', '^', '(', ')', 's', 'S'].includes(key)) {
                     // Check for shift to interpret multiplication and exponent
                     if (key === '*' && event.shiftKey) { // Shift+8 is *
                          appendToDisplay('*');
@@ -3070,6 +3057,8 @@ button:focus{ outline: 3px solid #005fcc; }
                          appendToDisplay('+');
                     } else if (key === '(' || key === ')') {
                          appendToDisplay(key);
+                    } else if (key.toLowerCase() === 's') { // Keyboard shortcut for square root
+                         appendToDisplay('sqrt(');
                     } else if (/\d/.test(key) || ['+', '-', '/', '.', '*'].includes(key)) {
                         // Standard numbers and operations (excluding shift-based ones already handled)
                         appendToDisplay(key);
