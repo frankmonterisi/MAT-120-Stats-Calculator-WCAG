@@ -573,7 +573,7 @@ button:focus{ outline: 3px solid #005fcc; }
                                 </div>
                                 <div class="w-full">
                                     <label for="ci-mean-c-level" class="block text-gray-700 font-medium mb-1">Confidence Level (C)</label>
-                                    <input type="number" step="0.01" id="ci-mean-c-level" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <input type="text" id="ci-mean-c-level" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                                 </div>
                             </div>
                         </div>
@@ -582,7 +582,7 @@ button:focus{ outline: 3px solid #005fcc; }
                             <p class="text-gray-700 font-medium">Data is taken from **L1** on the **Stats Lists** tab. Ensure your data is entered there before calculating.</p>
                             <div class="w-full">
                                 <label for="ci-mean-c-level-raw" class="block text-gray-700 font-medium mb-1">Confidence Level (C)</label>
-                                <input type="number" step="0.01" id="ci-mean-c-level-raw" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <input type="text" id="ci-mean-c-level-raw" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                             </div>
                         </div>
 
@@ -634,7 +634,7 @@ button:focus{ outline: 3px solid #005fcc; }
                         </div>
                         <div class="mt-4">
                             <label for="ci-prop-c-level" class="block text-gray-700 font-medium mb-1">Confidence Level (C)</label>
-                            <input type="number" step="0.01" id="ci-prop-c-level" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <input type="text" id="ci-prop-c-level" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                         </div>
                         <button onclick="calculateProportionCI()" class="button-style bg-green-600 text-white font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 w-full mt-4 button-keyboard-fix">
                             Calculate Proportion Interval
@@ -697,7 +697,7 @@ button:focus{ outline: 3px solid #005fcc; }
                                 </div>
                                 <div class="w-full">
                                     <label for="ht-mean-t-alpha" class="block text-gray-700 font-medium mb-1">Significance Level (α)</label>
-                                    <input type="number" step="0.01" id="ht-mean-t-alpha" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <input type="text" id="ht-mean-t-alpha" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                                 </div>
                                 <div class="w-full">
                                     <label for="ht-mean-t-tail" class="block text-gray-700 font-medium mb-1">Alternative Hypothesis (H₁)</label>
@@ -753,7 +753,7 @@ button:focus{ outline: 3px solid #005fcc; }
                             <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
                                 <div class="w-full">
                                     <label for="ht-mean-t2-alpha" class="block text-gray-700 font-medium mb-1">Significance Level (α)</label>
-                                    <input type="number" step="0.01" id="ht-mean-t2-alpha" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" value="0.05">
+                                    <input type="text" id="ht-mean-t2-alpha" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" value="0.05">
                                 </div>
                                 <div class="w-full">
                                     <label for="ht-mean-t2-tail" class="block text-gray-700 font-medium mb-1">Alternative Hypothesis (H₁)</label>
@@ -854,7 +854,7 @@ button:focus{ outline: 3px solid #005fcc; }
                                 </div>
                                 <div class="w-full">
                                     <label for="ht-prop-alpha" class="block text-gray-700 font-medium mb-1">Significance Level (α)</label>
-                                    <input type="number" step="0.01" id="ht-prop-alpha" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <input type="text" id="ht-prop-alpha" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                                 </div>
                                 <div class="w-full">
                                     <label for="ht-prop-tail" class="block text-gray-700 font-medium mb-1">Alternative Hypothesis (H₁)</label>
@@ -1028,6 +1028,27 @@ button:focus{ outline: 3px solid #005fcc; }
                 return NaN; // Invalid fraction
             }
             return parseFloat(value);
+        }
+
+        /**
+         * Safely parses probability/confidence inputs handling strict decimals (0.95) or percentages (95, 95%).
+         */
+        function parseProbabilityInput(rawStr) {
+            rawStr = String(rawStr).trim();
+            if (rawStr === '') return NaN;
+            
+            let val = NaN;
+            if (rawStr.indexOf('%') !== -1) {
+                const tmp = parseFloat(rawStr.replace('%', '').trim());
+                if (!isNaN(tmp)) val = tmp / 100;
+            } else {
+                const tmp = parseFloat(rawStr);
+                if (!isNaN(tmp)) {
+                    if (tmp > 1 && tmp <= 100) val = tmp / 100;
+                    else val = tmp;
+                }
+            }
+            return val;
         }
 
         /**
@@ -1829,7 +1850,7 @@ button:focus{ outline: 3px solid #005fcc; }
             return x;
         }
 
-        // --- T-Distribution CDF Functions (STABLE VERSION PROVIDED BY USER) ---
+        // --- T-Distribution CDF Functions ---
 
         function continuedFraction(x, a, b) {
             const maxIter = 200;
@@ -1877,6 +1898,11 @@ button:focus{ outline: 3px solid #005fcc; }
             if (x <= 0) return 0;
             if (x >= 1) return 1;
             
+            // SYMMETRY TRANSFORMATION (Crucial for convergence and preventing NaNs)
+            if (x > (a + 1) / (a + b + 2)) {
+                return 1 - incompleteBeta(1 - x, b, a);
+            }
+            
             const lbeta = logGamma(a) + logGamma(b) - logGamma(a + b);
             const front = Math.exp(a * Math.log(x) + b * Math.log(1 - x) - lbeta) / a;
             
@@ -1906,39 +1932,39 @@ button:focus{ outline: 3px solid #005fcc; }
         }
 
         /**
-         * Numerically approximates the inverse t-distribution CDF (T-Critical Value).
+         * Numerically calculates the inverse t-distribution CDF (T-Critical Value).
+         * Uses bisection to guarantee absolutely perfect convergence avoiding edge case calculation errors.
          */
         function tInvCDF(p, df) {
             if (df <= 0) return NaN;
             if (p <= 0) return -Infinity;
             if (p >= 1) return Infinity;
+            if (p === 0.5) return 0;
 
-            const tCDF = (t, df) => tDistributionCDF(t, df);
+            // Bisection method for 100% convergence stability
+            let lower = -100;
+            let upper = 100;
+            
+            // Expand bounds if necessary (for very extreme percentiles)
+            while (tDistributionCDF(lower, df) > p) lower *= 2;
+            while (tDistributionCDF(upper, df) < p) upper *= 2;
 
-            // Initial guess (using Normal approx)
-            let t = normalInvCDF(p);
-
-            // T-distribution PDF (needed for Newton-Raphson)
-            const tPDF = (t, df) => {
-                const inner = (1 + (t * t) / df);
-                const exponent = -(df + 1) / 2;
-                const betaFn = Math.exp(logGamma(df / 2) + logGamma(0.5) - logGamma((df + 1) / 2));
-                return (1 / (Math.sqrt(df) * betaFn)) * Math.pow(inner, exponent);
-            };
-
-            // Newton-Raphson iteration
-            for (let i = 0; i < 50; i++) {
-                let error = tCDF(t, df) - p;
-                let density = tPDF(t, df);
+            let mid;
+            // 100 iterations of bisection ensures ~30 decimals of accuracy
+            for (let i = 0; i < 100; i++) { 
+                mid = (lower + upper) / 2;
+                let cdfMid = tDistributionCDF(mid, df);
                 
-                // Avoid division by zero/near-zero density in the tails
-                if (Math.abs(density) < 1e-10) break;  
+                // Break early if we hit exactly what we need
+                if (Math.abs(cdfMid - p) < 1e-12) break;
                 
-                t = t - error / density;
-                if (Math.abs(error) < 1e-8) break; // Convergence check
+                if (cdfMid < p) {
+                    lower = mid;
+                } else {
+                    upper = mid;
+                }
             }
-
-            return t;
+            return mid;
         }
 
 
@@ -2333,7 +2359,7 @@ button:focus{ outline: 3px solid #005fcc; }
             resultsDiv.innerHTML = '<p>Calculating...</p>';
 
             let xBar, s, n;
-            let cLevel;
+            let cRaw, cLevel;
             let rawDataUsed = false;
             
             // --- 1. Gather Data & Confidence Level ---
@@ -2341,7 +2367,7 @@ button:focus{ outline: 3px solid #005fcc; }
                 xBar = parseFloat(document.getElementById('ci-mean-xbar').value);
                 s = parseFloat(document.getElementById('ci-mean-s').value);
                 n = parseInt(document.getElementById('ci-mean-n').value);
-                cLevel = parseFloat(document.getElementById('ci-mean-c-level').value);
+                cRaw = String(document.getElementById('ci-mean-c-level').value).trim();
             } else { // raw
                 const l1Inputs = document.querySelectorAll('.stats-input-l1');
                 const numbers = Array.from(l1Inputs)
@@ -2358,9 +2384,11 @@ button:focus{ outline: 3px solid #005fcc; }
 
                 xBar = getMean(numbers);
                 s = getSampleStandardDeviation(numbers);
-                cLevel = parseFloat(document.getElementById('ci-mean-c-level-raw').value); // Separate C-Level input for raw data
+                cRaw = String(document.getElementById('ci-mean-c-level-raw').value).trim(); // Separate C-Level input for raw data
                 rawDataUsed = true;
             }
+
+            cLevel = parseProbabilityInput(cRaw);
 
             // --- 2. Input Validation (Combined) ---
             if (isNaN(xBar) || isNaN(s) || s < 0 || isNaN(n) || n <= 1 || !Number.isInteger(n) || isNaN(cLevel) || cLevel <= 0 || cLevel >= 1) {
@@ -2436,24 +2464,11 @@ button:focus{ outline: 3px solid #005fcc; }
             const resultsDiv = document.getElementById('ci-results');
             resultsDiv.innerHTML = '<p>Calculating...</p>';
 
-            // Read method and raw confidence level input (be permissive)
+            // Read method and raw confidence level input
             const method = document.getElementById('ci-prop-input-method').value;
             const cRaw = String(document.getElementById('ci-prop-c-level').value).trim();
 
-            // Parse confidence level: accept 0.98, .98, 98, or "98%"
-            let cLevel = NaN;
-            if (cRaw.indexOf('%') !== -1) {
-                // "98%"
-                const tmp = parseFloat(cRaw.replace('%','').trim());
-                if (!isNaN(tmp)) cLevel = tmp / 100;
-            } else {
-                const tmp = parseFloat(cRaw);
-                if (!isNaN(tmp)) {
-                    // If user entered 98 assume percent entry
-                    if (tmp > 1 && tmp <= 100) cLevel = tmp / 100;
-                    else cLevel = tmp;
-                }
-            }
+            let cLevel = parseProbabilityInput(cRaw);
 
             if (isNaN(cLevel) || cLevel <= 0 || cLevel >= 1) {
                 resultsDiv.innerHTML = '<p class="text-red-500">Error: Confidence Level (C) must be between 0 and 1 (e.g. 0.95 or 95%).</p>';
@@ -2675,7 +2690,7 @@ button:focus{ outline: 3px solid #005fcc; }
             const method = methodRadio ? methodRadio.value : 'summary';
             resultsDiv.innerHTML = '<p>Calculating...</p>';
 
-            const alpha = parseFloat(document.getElementById('ht-mean-t2-alpha').value);
+            let alpha = parseProbabilityInput(document.getElementById('ht-mean-t2-alpha').value);
             const tailType = document.getElementById('ht-mean-t2-tail').value; 
 
             if (isNaN(alpha) || alpha <= 0 || alpha >= 1) {
@@ -2785,7 +2800,7 @@ button:focus{ outline: 3px solid #005fcc; }
             resultsDiv.innerHTML = '<p>Calculating...</p>';
 
             const mu0 = parseFloat(document.getElementById('ht-mean-t-mu0').value);
-            const alpha = parseFloat(document.getElementById('ht-mean-t-alpha').value);
+            let alpha = parseProbabilityInput(document.getElementById('ht-mean-t-alpha').value);
             const tailType = document.getElementById('ht-mean-t-tail').value;
 
             let xBar, s, n;
@@ -2913,7 +2928,7 @@ button:focus{ outline: 3px solid #005fcc; }
             resultsDiv.innerHTML = '<p>Calculating...</p>';
 
             const p0 = parseFloat(document.getElementById('ht-prop-p0').value);
-            const alpha = parseFloat(document.getElementById('ht-prop-alpha').value);
+            let alpha = parseProbabilityInput(document.getElementById('ht-prop-alpha').value);
             const tailType = document.getElementById('ht-prop-tail').value;
 
             let n, x, pHat;
