@@ -1142,9 +1142,13 @@ button:focus{ outline: 3px solid #005fcc; }
         function calculateResult() {
             if (currentInput === '') return;
             try {
-                // Using eval is a security risk, but for a simple, local calculator it's acceptable.
-                // A production environment would use a math parser library.
-                result = eval(currentInput.replace(/\^/g, '**'));
+                // Evaluate the math expression
+                let rawResult = eval(currentInput.replace(/\^/g, '**'));
+                
+                // Fix floating-point precision error by capping precision and parsing back
+                // This trims trailing noisy 0s or 9s (e.g. 147.2 - 5.8 -> 141.4)
+                result = parseFloat(rawResult.toPrecision(14)).toString();
+                
                 currentInput = '';
                 updateDisplay();
             } catch (e) {
@@ -1157,7 +1161,9 @@ button:focus{ outline: 3px solid #005fcc; }
         function squareRoot() {
             if (currentInput === '') return;
             try {
-                result = Math.sqrt(eval(currentInput));
+                let rawResult = Math.sqrt(eval(currentInput));
+                // Fix floating-point precision error by capping precision and parsing back
+                result = parseFloat(rawResult.toPrecision(14)).toString();
                 currentInput = '';
                 updateDisplay();
             } catch (e) {
