@@ -1316,6 +1316,7 @@ button:focus{ outline: 3px solid #005fcc; }
          * @returns {number} The median.
          */
         function getMedian(data) {
+            if (data.length === 0) return 0;
             const mid = Math.floor(data.length / 2);
             if (data.length % 2 === 0) {
                 return (data[mid - 1] + data[mid]) / 2;
@@ -1362,22 +1363,29 @@ button:focus{ outline: 3px solid #005fcc; }
         }
 
         /**
-         * Calculates the quartile of a sorted list of numbers.
+         * Calculates the quartile of a sorted list of numbers using the standard TI-84 (Tukey's) method.
          * @param {number[]} data The array of numbers, which must be sorted.
          * @param {number} percentile The percentile to calculate (e.g., 0.25 for Q1, 0.75 for Q3).
          * @returns {number} The quartile value.
          */
         function getQuartile(data, percentile) {
-            const index = percentile * (data.length - 1);
-            const lowerIndex = Math.floor(index);
-            const upperIndex = Math.ceil(index);
-            if (lowerIndex === upperIndex) {
-                return data[lowerIndex];
+            const n = data.length;
+            if (n === 0) return 0;
+            if (n === 1) return data[0];
+
+            const mid = Math.floor(n / 2);
+
+            if (percentile === 0.25) {
+                // Q1: Median of the lower half (excluding the overall median if n is odd)
+                const lowerHalf = data.slice(0, mid);
+                return getMedian(lowerHalf);
+            } else if (percentile === 0.75) {
+                // Q3: Median of the upper half (excluding the overall median if n is odd)
+                const upperHalf = n % 2 === 0 ? data.slice(mid) : data.slice(mid + 1);
+                return getMedian(upperHalf);
             }
-            const lowerValue = data[lowerIndex];
-            const upperValue = data[upperIndex];
-            const interpolation = (index - lowerIndex) * (upperValue - lowerValue);
-            return lowerValue + interpolation;
+
+            return getMedian(data); // Fallback
         }
 
         /**
@@ -1503,9 +1511,9 @@ button:focus{ outline: 3px solid #005fcc; }
                 <p><strong>Population Standard Deviation (σₓ):</strong> ${popStdDev.toFixed(4)}</p>
                 <hr class="my-4 border-gray-300">
                 <p><strong>Min:</strong> ${min}</p>
-                <p><strong>Q1:</strong> ${q1.toFixed(4)}</p>
-                <p><strong>Median:</strong> ${median.toFixed(4)}</p>
-                <p><strong>Q3:</strong> ${q3.toFixed(4)}</p>
+                <p><strong>Q1:</strong> ${q1}</p>
+                <p><strong>Median:</strong> ${median}</p>
+                <p><strong>Q3:</strong> ${q3}</p>
                 <p><strong>Max:</strong> ${max}</p>
                 <p><strong>Range:</strong> ${range.toFixed(4)}</p>
             `;
