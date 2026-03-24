@@ -441,7 +441,7 @@ button:focus{ outline: 3px solid #005fcc; }
                                 </div>
                                 <div id="percentile-single-value-input">
                                     <label for="percentile-prob-input" class="block text-gray-700 font-medium mb-1">Area/Probability</label>
-                                    <input type="number" id="percentile-prob-input" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <input type="text" id="percentile-prob-input" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                                 </div>
                             </div>
 
@@ -1181,6 +1181,21 @@ button:focus{ outline: 3px solid #005fcc; }
             }
         }
 
+        function squareRoot() {
+            if (currentInput === '') return;
+            try {
+                let rawResult = Math.sqrt(eval(currentInput));
+                // Fix floating-point precision error by capping precision and parsing back
+                result = parseFloat(rawResult.toPrecision(14)).toString();
+                currentInput = '';
+                updateDisplay();
+            } catch (e) {
+                calcDisplay.innerText = 'Error';
+                currentInput = '';
+                result = '';
+            }
+        }
+
         /**
          * Toggles the sign of the current input or the last result.
          */
@@ -1820,13 +1835,14 @@ button:focus{ outline: 3px solid #005fcc; }
                 q = Math.sqrt(-2 * Math.log(p));
                 x = (((((c[0]*q + c[1])*q + c[2])*q + c[3])*q + c[4])*q + c[5]) /
                     ((((d[0]*q + d[1])*q + d[2])*q + d[3])*q + 1);
-                x = -x;
+                // Rational approximation returns negative value naturally for lower tail
             } else if (phigh < p) {
                 // upper region
                 q = Math.sqrt(-2 * Math.log(1 - p));
                 x = (((((c[0]*q + c[1])*q + c[2])*q + c[3])*q + c[4])*q + c[5]) /
                     ((((d[0]*q + d[1])*q + d[2])*q + d[3])*q + 1);
-                // x stays positive
+                // Rational approximation gives negative value, MUST flip sign for upper tail
+                x = -x;
             } else {
                 // central region
                 q = p - 0.5;
@@ -2063,7 +2079,9 @@ button:focus{ outline: 3px solid #005fcc; }
             const mean = parseFloat(document.getElementById('percentile-mean-input').value);
             const stdDev = parseFloat(document.getElementById('percentile-std-dev-input').value);
             const areaType = document.getElementById('percentile-type-select').value;
-            const prob = parseFloat(document.getElementById('percentile-prob-input').value);
+            const probRaw = document.getElementById('percentile-prob-input').value;
+            
+            const prob = parseProbabilityInput(probRaw);
 
             if (isNaN(prob) || isNaN(mean) || isNaN(stdDev) || stdDev <= 0 || prob <= 0 || prob >= 1) {
                 resultDiv.innerHTML = '<p class="text-red-500">Error: Please enter a valid area/probability (between 0 and 1) and valid mean/standard deviation (must be > 0).</p>';
