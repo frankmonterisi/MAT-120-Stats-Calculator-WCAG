@@ -1229,30 +1229,22 @@ button:focus{ outline: 3px solid #005fcc; }
             updateDisplay();
         }
 
-        // --- Combinations, Permutations, Factorials Logic (Unchanged) ---
+        // --- Combinations, Permutations, Factorials Logic (UPDATED TO BIGINT) ---
 
         /**
-         * Calculates the factorial of a number.
-         * @param {number} n The number to calculate the factorial of.
-         * @returns {number} The factorial result or an error message.
+         * Formats BigInt numbers for display, avoiding layout breaking on huge numbers.
          */
-        function factorial(n) {
-            if (n < 0 || !Number.isInteger(n)) {
-                return NaN;
+        function formatLargeNumber(bigIntResult) {
+            const resultStr = bigIntResult.toString();
+            if (resultStr.length > 30) {
+                // Show scientific notation as primary, full exact number below
+                const sci = resultStr[0] + '.' + resultStr.substring(1, 6) + 'e+' + (resultStr.length - 1);
+                return `${sci} <div class="mt-2 text-sm text-gray-500 font-mono break-all leading-tight">Exact: ${resultStr}</div>`;
+            } else {
+                return bigIntResult.toLocaleString(); // Commas for thousands
             }
-            if (n === 0 || n === 1) {
-                return 1;
-            }
-            let result = 1;
-            for (let i = 2; i <= n; i++) {
-                result *= i;
-            }
-            return result;
         }
 
-        /**
-         * Handles the factorial calculation and displays the result.
-         */
         function calculateFactorial() {
             const input = document.getElementById('factorial-input').value;
             const n = parseInt(input);
@@ -1262,18 +1254,24 @@ button:focus{ outline: 3px solid #005fcc; }
                 resultDiv.innerText = 'Error: n must be a non-negative integer.';
                 return;
             }
+            
+            // Prevent browser freezing on impossibly huge inputs
+            if (n > 20000) {
+                 resultDiv.innerText = 'Error: n is too large (maximum allowed is 20,000 to prevent browser lockup).';
+                 return;
+            }
 
-            const result = factorial(n);
-            if (isNaN(result)) {
+            try {
+                let res = 1n;
+                for (let i = 2n; i <= BigInt(n); i++) {
+                    res *= i;
+                }
+                resultDiv.innerHTML = `Result: ${formatLargeNumber(res)}`;
+            } catch(e) {
                 resultDiv.innerText = 'Error: Calculation out of range.';
-            } else {
-                resultDiv.innerText = `Result: ${result}`;
             }
         }
 
-        /**
-         * Handles the combinations calculation and displays the result.
-         */
         function calculateCombinations() {
             const n = parseInt(document.getElementById('combinations-n').value);
             const r = parseInt(document.getElementById('combinations-r').value);
@@ -1283,20 +1281,29 @@ button:focus{ outline: 3px solid #005fcc; }
                 resultDiv.innerText = 'Error: Invalid input. Ensure n and r are non-negative integers and n ≥ r.';
                 return;
             }
+            
+            if (n > 20000) {
+                 resultDiv.innerText = 'Error: n is too large (maximum allowed is 20,000).';
+                 return;
+            }
 
-            // Using the stable binomial coefficient function from Distributions Logic
-            const result = getBinomialCoefficient(n, r);
+            try {
+                let k = r;
+                if (k > n / 2) k = n - k; // symmetry optimization
+                let res = 1n;
+                let nBig = BigInt(n);
+                let kBig = BigInt(k);
+                
+                for (let i = 1n; i <= kBig; i++) {
+                    res = (res * (nBig - i + 1n)) / i;
+                }
 
-            if (isNaN(result)) {
+                resultDiv.innerHTML = `Result: ${formatLargeNumber(res)}`;
+            } catch(e) {
                 resultDiv.innerText = 'Error: Calculation out of range.';
-            } else {
-                resultDiv.innerText = `Result: ${result}`;
             }
         }
 
-        /**
-         * Handles the permutations calculation and displays the result.
-         */
         function calculatePermutations() {
             const n = parseInt(document.getElementById('permutations-n').value);
             const r = parseInt(document.getElementById('permutations-r').value);
@@ -1306,18 +1313,25 @@ button:focus{ outline: 3px solid #005fcc; }
                 resultDiv.innerText = 'Error: Invalid input. Ensure n and r are non-negative integers and n ≥ r.';
                 return;
             }
-
-            const nFact = factorial(n);
-            const nMinusRFact = factorial(n - r);
-
-            if (isNaN(nFact) || isNaN(nMinusRFact)) {
-                 resultDiv.innerText = 'Error: Calculation out of range.';
+            
+            if (n > 20000) {
+                 resultDiv.innerText = 'Error: n is too large (maximum allowed is 20,000).';
                  return;
             }
 
-            const result = nFact / nMinusRFact;
+            try {
+                let res = 1n;
+                let nBig = BigInt(n);
+                let rBig = BigInt(r);
+                
+                for (let i = 0n; i < rBig; i++) {
+                    res *= (nBig - i);
+                }
 
-            resultDiv.innerText = `Result: ${result}`;
+                resultDiv.innerHTML = `Result: ${formatLargeNumber(res)}`;
+            } catch(e) {
+                 resultDiv.innerText = 'Error: Calculation out of range.';
+            }
         }
 
         // --- Stats Lists Logic (Helper functions for descriptive stats) ---
@@ -1835,14 +1849,13 @@ button:focus{ outline: 3px solid #005fcc; }
                 q = Math.sqrt(-2 * Math.log(p));
                 x = (((((c[0]*q + c[1])*q + c[2])*q + c[3])*q + c[4])*q + c[5]) /
                     ((((d[0]*q + d[1])*q + d[2])*q + d[3])*q + 1);
-                // Rational approximation returns negative value naturally for lower tail
+                x = -x;
             } else if (phigh < p) {
                 // upper region
                 q = Math.sqrt(-2 * Math.log(1 - p));
                 x = (((((c[0]*q + c[1])*q + c[2])*q + c[3])*q + c[4])*q + c[5]) /
                     ((((d[0]*q + d[1])*q + d[2])*q + d[3])*q + 1);
-                // Rational approximation gives negative value, MUST flip sign for upper tail
-                x = -x;
+                // x stays positive
             } else {
                 // central region
                 q = p - 0.5;
@@ -1866,7 +1879,7 @@ button:focus{ outline: 3px solid #005fcc; }
             return x;
         }
 
-        // --- T-Distribution CDF Functions ---
+        // --- T-Distribution CDF Functions (STABLE VERSION) ---
 
         function continuedFraction(x, a, b) {
             const maxIter = 200;
