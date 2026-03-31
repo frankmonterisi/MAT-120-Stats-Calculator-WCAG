@@ -249,6 +249,7 @@ button:focus{ outline: 3px solid #005fcc; }
                                     <div class="flex flex-col space-y-2">
                                         <h4 class="block text-gray-700 font-medium">L1 (Data/Values)</h4>
                                         <script>
+                                            // FIX: Retaining explicit ID and title for each input. Labeling happens via 'for' attribute and visually hidden text.
                                             const MAX_DATA_ROWS = 40; 
                                             for (let i = 0; i < MAX_DATA_ROWS; i++) {
                                                 document.write(`<label for="l1-data-${i}" class="sr-only-wcag">L1 data row ${i+1}</label><input type="text" id="l1-data-${i}" class="p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 stats-input-l1" data-row="${i}" title="L1 data entry row ${i+1}">`);
@@ -258,6 +259,7 @@ button:focus{ outline: 3px solid #005fcc; }
                                     <div class="flex flex-col space-y-2">
                                         <h4 class="block text-gray-700 font-medium">L2 (Data/Frequency)</h4>
                                         <script>
+                                            // FIX: Retaining explicit ID and title for each input. Labeling happens via 'for' attribute and visually hidden text.
                                             const MAX_DATA_ROWS_L2 = 40; 
                                             for (let i = 0; i < MAX_DATA_ROWS_L2; i++) {
                                                 document.write(`<label for="l2-data-${i}" class="sr-only-wcag">L2 data row ${i+1}</label><input type="text" id="l2-data-${i}" class="p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 stats-input-l2" data-row="${i}" title="L2 data entry row ${i+1}">`);
@@ -1849,13 +1851,13 @@ button:focus{ outline: 3px solid #005fcc; }
                 q = Math.sqrt(-2 * Math.log(p));
                 x = (((((c[0]*q + c[1])*q + c[2])*q + c[3])*q + c[4])*q + c[5]) /
                     ((((d[0]*q + d[1])*q + d[2])*q + d[3])*q + 1);
-                x = -x;
+                // Lower tail produces a negative rational approx naturally, no sign flip needed
             } else if (phigh < p) {
                 // upper region
                 q = Math.sqrt(-2 * Math.log(1 - p));
-                x = (((((c[0]*q + c[1])*q + c[2])*q + c[3])*q + c[4])*q + c[5]) /
+                x = -(((((c[0]*q + c[1])*q + c[2])*q + c[3])*q + c[4])*q + c[5]) /
                     ((((d[0]*q + d[1])*q + d[2])*q + d[3])*q + 1);
-                // x stays positive
+                // Upper tail calculation uses the same formula but the result needs to be positive, so we invert the naturally negative result
             } else {
                 // central region
                 q = p - 0.5;
@@ -3044,8 +3046,8 @@ button:focus{ outline: 3px solid #005fcc; }
 
         // Bind keyboard events to the standard calculator for improved accessibility
         document.addEventListener('keydown', (event) => {
-            // Check if user is inside any input field or textarea
-            const isTypingInInput = event.target.tagName.toLowerCase() === 'input' || event.target.tagName.toLowerCase() === 'textarea';
+            // Check if user is inside a numeric input field on any tab
+            const isTypingInInput = event.target.closest('input[type="number"]') || event.target.closest('textarea');
 
             // --- Stats Lists Tab Navigation (CORRECTED) ---
             if (event.target.closest('#panel-stats-lists') && isTypingInInput) {
@@ -3070,7 +3072,6 @@ button:focus{ outline: 3px solid #005fcc; }
                         nextInput.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                     }
                 } else if (event.key === 'ArrowRight') {
-                    // Only jump if cursor is at the end of the text, but to keep it simple, we just jump
                     event.preventDefault();
                     let nextInput;
                     
@@ -3101,7 +3102,7 @@ button:focus{ outline: 3px solid #005fcc; }
             // --- Standard Calculator Keyboard Support ---
             if (event.target.closest('#panel-calculator') && !isTypingInInput) {
                 const key = event.key;
-                if (/\d/.test(key) || ['+', '-', '*', '/', '.', '^', '(', ')', 's', 'S'].includes(key)) {
+                if (/\d/.test(key) || ['+', '-', '*', '/', '.', '^', '(', ')'].includes(key)) {
                     // Check for shift to interpret multiplication and exponent
                     if (key === '*' && event.shiftKey) { // Shift+8 is *
                          appendToDisplay('*');
@@ -3111,8 +3112,6 @@ button:focus{ outline: 3px solid #005fcc; }
                          appendToDisplay('+');
                     } else if (key === '(' || key === ')') {
                          appendToDisplay(key);
-                    } else if (key.toLowerCase() === 's') { // Keyboard shortcut for square root
-                         appendToDisplay('sqrt(');
                     } else if (/\d/.test(key) || ['+', '-', '/', '.', '*'].includes(key)) {
                         // Standard numbers and operations (excluding shift-based ones already handled)
                         appendToDisplay(key);
