@@ -249,7 +249,6 @@ button:focus{ outline: 3px solid #005fcc; }
                                     <div class="flex flex-col space-y-2">
                                         <h4 class="block text-gray-700 font-medium">L1 (Data/Values)</h4>
                                         <script>
-                                            // FIX: Retaining explicit ID and title for each input. Labeling happens via 'for' attribute and visually hidden text.
                                             const MAX_DATA_ROWS = 40; 
                                             for (let i = 0; i < MAX_DATA_ROWS; i++) {
                                                 document.write(`<label for="l1-data-${i}" class="sr-only-wcag">L1 data row ${i+1}</label><input type="text" id="l1-data-${i}" class="p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 stats-input-l1" data-row="${i}" title="L1 data entry row ${i+1}">`);
@@ -259,7 +258,6 @@ button:focus{ outline: 3px solid #005fcc; }
                                     <div class="flex flex-col space-y-2">
                                         <h4 class="block text-gray-700 font-medium">L2 (Data/Frequency)</h4>
                                         <script>
-                                            // FIX: Retaining explicit ID and title for each input. Labeling happens via 'for' attribute and visually hidden text.
                                             const MAX_DATA_ROWS_L2 = 40; 
                                             for (let i = 0; i < MAX_DATA_ROWS_L2; i++) {
                                                 document.write(`<label for="l2-data-${i}" class="sr-only-wcag">L2 data row ${i+1}</label><input type="text" id="l2-data-${i}" class="p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 stats-input-l2" data-row="${i}" title="L2 data entry row ${i+1}">`);
@@ -444,6 +442,12 @@ button:focus{ outline: 3px solid #005fcc; }
                                 <div id="percentile-single-value-input">
                                     <label for="percentile-prob-input" class="block text-gray-700 font-medium mb-1">Area/Probability</label>
                                     <input type="text" id="percentile-prob-input" class="w-full p-2 text-gray-800 bg-gray-100 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label class="inline-flex items-center text-gray-700 font-medium cursor-pointer">
+                                        <input type="checkbox" id="percentile-empirical-checkbox" class="form-checkbox h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                                        <span class="ml-2">Use Empirical Rule approximations (68%, 95%, 99.7%)</span>
+                                    </label>
                                 </div>
                             </div>
 
@@ -1851,13 +1855,13 @@ button:focus{ outline: 3px solid #005fcc; }
                 q = Math.sqrt(-2 * Math.log(p));
                 x = (((((c[0]*q + c[1])*q + c[2])*q + c[3])*q + c[4])*q + c[5]) /
                     ((((d[0]*q + d[1])*q + d[2])*q + d[3])*q + 1);
-                // Lower tail produces a negative rational approx naturally, no sign flip needed
+                x = -x; // Lower tail gives a positive rational approx, must be negative
             } else if (phigh < p) {
                 // upper region
                 q = Math.sqrt(-2 * Math.log(1 - p));
-                x = -(((((c[0]*q + c[1])*q + c[2])*q + c[3])*q + c[4])*q + c[5]) /
+                x = (((((c[0]*q + c[1])*q + c[2])*q + c[3])*q + c[4])*q + c[5]) /
                     ((((d[0]*q + d[1])*q + d[2])*q + d[3])*q + 1);
-                // Upper tail calculation uses the same formula but the result needs to be positive, so we invert the naturally negative result
+                // Upper tail calculation produces positive answer, so NO sign flip needed!
             } else {
                 // central region
                 q = p - 0.5;
@@ -2097,6 +2101,7 @@ button:focus{ outline: 3px solid #005fcc; }
             const probRaw = document.getElementById('percentile-prob-input').value;
             
             const prob = parseProbabilityInput(probRaw);
+            const useEmpirical = document.getElementById('percentile-empirical-checkbox').checked;
 
             if (isNaN(prob) || isNaN(mean) || isNaN(stdDev) || stdDev <= 0 || prob <= 0 || prob >= 1) {
                 resultDiv.innerHTML = '<p class="text-red-500">Error: Please enter a valid area/probability (between 0 and 1) and valid mean/standard deviation (must be > 0).</p>';
@@ -2106,47 +2111,47 @@ button:focus{ outline: 3px solid #005fcc; }
             try {
                 let xValue;
                 const epsilon = 1e-7; // Tolerance for floating point comparisons to capture exact pedagogical percentages
+                let zScoreLower, zScoreUpper, zScore;
 
                 if (areaType === 'less-than') {
-                    let zScore;
                     // Empirical rule overrides
-                    if (Math.abs(prob - 0.16) < epsilon) zScore = -1;
-                    else if (Math.abs(prob - 0.84) < epsilon) zScore = 1;
-                    else if (Math.abs(prob - 0.025) < epsilon) zScore = -2;
-                    else if (Math.abs(prob - 0.975) < epsilon) zScore = 2;
-                    else if (Math.abs(prob - 0.0015) < epsilon) zScore = -3;
-                    else if (Math.abs(prob - 0.9985) < epsilon) zScore = 3;
+                    if (useEmpirical && Math.abs(prob - 0.16) < epsilon) zScore = -1;
+                    else if (useEmpirical && Math.abs(prob - 0.84) < epsilon) zScore = 1;
+                    else if (useEmpirical && Math.abs(prob - 0.025) < epsilon) zScore = -2;
+                    else if (useEmpirical && Math.abs(prob - 0.975) < epsilon) zScore = 2;
+                    else if (useEmpirical && Math.abs(prob - 0.0015) < epsilon) zScore = -3;
+                    else if (useEmpirical && Math.abs(prob - 0.9985) < epsilon) zScore = 3;
                     else zScore = normalInvCDF(prob);
 
                     xValue = mean + zScore * stdDev;
                     resultDiv.innerHTML = `
+                        <p><strong>Resulting Z-Score:</strong> ${zScore.toFixed(4)}</p>
                         <p><strong>Resulting X-Value:</strong> ${xValue.toFixed(4)}</p>
                     `;
                 } else if (areaType === 'greater-than') {
-                    let zScore;
                     // Empirical rule overrides
-                    if (Math.abs(prob - 0.84) < epsilon) zScore = -1;
-                    else if (Math.abs(prob - 0.16) < epsilon) zScore = 1;
-                    else if (Math.abs(prob - 0.975) < epsilon) zScore = -2;
-                    else if (Math.abs(prob - 0.025) < epsilon) zScore = 2;
-                    else if (Math.abs(prob - 0.9985) < epsilon) zScore = -3;
-                    else if (Math.abs(prob - 0.0015) < epsilon) zScore = 3;
+                    if (useEmpirical && Math.abs(prob - 0.84) < epsilon) zScore = -1;
+                    else if (useEmpirical && Math.abs(prob - 0.16) < epsilon) zScore = 1;
+                    else if (useEmpirical && Math.abs(prob - 0.975) < epsilon) zScore = -2;
+                    else if (useEmpirical && Math.abs(prob - 0.025) < epsilon) zScore = 2;
+                    else if (useEmpirical && Math.abs(prob - 0.9985) < epsilon) zScore = -3;
+                    else if (useEmpirical && Math.abs(prob - 0.0015) < epsilon) zScore = 3;
                     else zScore = normalInvCDF(1 - prob);
 
                     xValue = mean + zScore * stdDev;
                     resultDiv.innerHTML = `
+                        <p><strong>Resulting Z-Score:</strong> ${zScore.toFixed(4)}</p>
                         <p><strong>Resulting X-Value:</strong> ${xValue.toFixed(4)}</p>
                     `;
                 } else if (areaType === 'between') {
-                    let zScoreLower, zScoreUpper;
                     // Empirical rule overrides for exact middle areas
-                    if (Math.abs(prob - 0.68) < epsilon) {
+                    if (useEmpirical && Math.abs(prob - 0.68) < epsilon) {
                         zScoreLower = -1;
                         zScoreUpper = 1;
-                    } else if (Math.abs(prob - 0.95) < epsilon) {
+                    } else if (useEmpirical && Math.abs(prob - 0.95) < epsilon) {
                         zScoreLower = -2;
                         zScoreUpper = 2;
-                    } else if (Math.abs(prob - 0.997) < epsilon) {
+                    } else if (useEmpirical && Math.abs(prob - 0.997) < epsilon) {
                         zScoreLower = -3;
                         zScoreUpper = 3;
                     } else {
@@ -2158,6 +2163,9 @@ button:focus{ outline: 3px solid #005fcc; }
                     const xValueLower = mean + zScoreLower * stdDev;
                     const xValueUpper = mean + zScoreUpper * stdDev;
                     resultDiv.innerHTML = `
+                        <p><strong>Lower Z-Score:</strong> ${zScoreLower.toFixed(4)}</p>
+                        <p><strong>Upper Z-Score:</strong> ${zScoreUpper.toFixed(4)}</p>
+                        <hr class="my-2 border-gray-300">
                         <p><strong>Lower X-Value:</strong> ${xValueLower.toFixed(4)}</p>
                         <p><strong>Upper X-Value:</strong> ${xValueUpper.toFixed(4)}</p>
                     `;
@@ -3102,7 +3110,7 @@ button:focus{ outline: 3px solid #005fcc; }
             // --- Standard Calculator Keyboard Support ---
             if (event.target.closest('#panel-calculator') && !isTypingInInput) {
                 const key = event.key;
-                if (/\d/.test(key) || ['+', '-', '*', '/', '.', '^', '(', ')'].includes(key)) {
+                if (/\d/.test(key) || ['+', '-', '*', '/', '.', '^', '(', ')', 's', 'S'].includes(key)) {
                     // Check for shift to interpret multiplication and exponent
                     if (key === '*' && event.shiftKey) { // Shift+8 is *
                          appendToDisplay('*');
@@ -3112,6 +3120,8 @@ button:focus{ outline: 3px solid #005fcc; }
                          appendToDisplay('+');
                     } else if (key === '(' || key === ')') {
                          appendToDisplay(key);
+                    } else if (key.toLowerCase() === 's') { // Keyboard shortcut for square root
+                         appendToDisplay('sqrt(');
                     } else if (/\d/.test(key) || ['+', '-', '/', '.', '*'].includes(key)) {
                         // Standard numbers and operations (excluding shift-based ones already handled)
                         appendToDisplay(key);
