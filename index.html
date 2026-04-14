@@ -1803,7 +1803,7 @@ button:focus{ outline: 3px solid #005fcc; }
             }
         }
 
-        // --- Z-Distribution Functions (Unchanged) ---
+        // --- Z-Distribution Functions ---
         function erf(x) {
             // Abramowitz & Stegun approximation
             const sign = x >= 0 ? 1 : -1;
@@ -1855,13 +1855,11 @@ button:focus{ outline: 3px solid #005fcc; }
                 q = Math.sqrt(-2 * Math.log(p));
                 x = (((((c[0]*q + c[1])*q + c[2])*q + c[3])*q + c[4])*q + c[5]) /
                     ((((d[0]*q + d[1])*q + d[2])*q + d[3])*q + 1);
-                x = -x; // Lower tail gives a positive rational approx, must be negative
             } else if (phigh < p) {
                 // upper region
                 q = Math.sqrt(-2 * Math.log(1 - p));
-                x = (((((c[0]*q + c[1])*q + c[2])*q + c[3])*q + c[4])*q + c[5]) /
+                x = -(((((c[0]*q + c[1])*q + c[2])*q + c[3])*q + c[4])*q + c[5]) /
                     ((((d[0]*q + d[1])*q + d[2])*q + d[3])*q + 1);
-                // Upper tail calculation produces positive answer, so NO sign flip needed!
             } else {
                 // central region
                 q = p - 0.5;
